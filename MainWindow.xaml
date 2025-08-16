@@ -5,8 +5,155 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TouchGanttChart"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="{Binding Title}" 
+        Height="800" 
+        Width="1200"
+        MinHeight="600"
+        MinWidth="800"
+        Loaded="MainWindow_Loaded"
+        Closing="MainWindow_Closing"
+        IsManipulationEnabled="True"
+        WindowState="Maximized">
+    
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Touch-optimized toolbar -->
+        <StackPanel Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    Background="#f8f9fa"
+                    Margin="0,0,0,8">
+            
+            <Button Content="New Project" 
+                    Command="{Binding NewProjectCommand}"
+                    MinHeight="44" MinWidth="120"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"/>
+            
+            <Button Content="Open Project" 
+                    Command="{Binding OpenProjectCommand}"
+                    MinHeight="44" MinWidth="120"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"/>
+            
+            <Button Content="Save" 
+                    Command="{Binding SaveCommand}"
+                    MinHeight="44" MinWidth="80"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"/>
+            
+            <Separator Margin="8,0"/>
+            
+            <Button Content="Add Task" 
+                    Command="{Binding AddTaskCommand}"
+                    MinHeight="44" MinWidth="100"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"/>
+            
+            <Button Content="Export PDF" 
+                    Command="{Binding ExportPdfCommand}"
+                    MinHeight="44" MinWidth="120"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"/>
+            
+        </StackPanel>
+
+        <!-- Main content area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" MinWidth="200"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Project/Task tree view -->
+            <Border Grid.Column="0" 
+                    Background="White"
+                    BorderBrush="#dee2e6"
+                    BorderThickness="0,0,1,0">
+                
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Projects &amp; Tasks" 
+                               FontSize="16" 
+                               FontWeight="SemiBold"
+                               Margin="16,12"/>
+
+                    <TreeView Grid.Row="1" 
+                              ItemsSource="{Binding Projects}"
+                              Margin="8">
+                        <TreeView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" 
+                                           FontSize="14"
+                                           Padding="4"/>
+                            </DataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Grid>
+            </Border>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" 
+                          Width="8" 
+                          HorizontalAlignment="Stretch"
+                          Background="#dee2e6"/>
+
+            <!-- Gantt chart area -->
+            <Border Grid.Column="2" 
+                    Background="White">
+                
+                <ScrollViewer x:Name="GanttScrollViewer"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              IsManipulationEnabled="True">
+                    
+                    <!-- Placeholder for Gantt chart control -->
+                    <Grid x:Name="GanttCanvas" 
+                          Background="White"
+                          IsManipulationEnabled="True"
+                          MinHeight="400">
+                        
+                        <TextBlock Text="Gantt Chart Canvas - To be implemented in Phase 2" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center"
+                                   FontSize="16" 
+                                   FontStyle="Italic"
+                                   Foreground="#6c757d"/>
+                        
+                    </Grid>
+                    
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Status bar -->
+        <StatusBar Grid.Row="2" 
+                   Height="32"
+                   Background="#f8f9fa">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusMessage}"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Zoom: " Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding ZoomLevel, StringFormat=P0}" Margin="0,0,16,0"/>
+                    <ProgressBar Width="120" 
+                                 Height="16"
+                                 IsIndeterminate="{Binding IsLoading}"
+                                 Visibility="{Binding IsLoading, Converter={x:Static BooleanToVisibilityConverter.Instance}}"/>
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
 
     </Grid>
+
 </Window>
