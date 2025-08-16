@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TouchGanttChart", "TouchGanttChart.csproj", "{4E31F277-A3FD-AA11-A3D9-1930CC7BCCBE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E31F277-A3FD-AA11-A3D9-1930CC7BCCBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E31F277-A3FD-AA11-A3D9-1930CC7BCCBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E31F277-A3FD-AA11-A3D9-1930CC7BCCBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E31F277-A3FD-AA11-A3D9-1930CC7BCCBE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DB7B32C6-BCAE-41F6-A60D-41C8941E6726}
+	EndGlobalSection
+EndGlobal
