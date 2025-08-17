@@ -1,0 +1,238 @@
+﻿<Window x:Class="TouchGanttChart.Views.TaskEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TouchGanttChart.Views"
+        mc:Ignorable="d"
+        Title="Task Details" 
+        Height="700" 
+        Width="900"
+        MinHeight="600"
+        MinWidth="800"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        IsManipulationEnabled="True"
+        Background="#f8f9fa">
+    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        
+        <!-- Touch-optimized button style -->
+        <Style x:Key="TouchButtonStyle" TargetType="Button">
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="#007bff"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#0056b3"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#6c757d"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Touch-optimized text input style -->
+        <Style x:Key="TouchTextBoxStyle" TargetType="TextBox">
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#ced4da"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+        
+        <!-- Touch-optimized ComboBox style -->
+        <Style x:Key="TouchComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#ced4da"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+        
+        <!-- Touch-optimized DatePicker style -->
+        <Style x:Key="TouchDatePickerStyle" TargetType="DatePicker">
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#ced4da"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+        
+        <!-- Label style for touch interfaces -->
+        <Style x:Key="TouchLabelStyle" TargetType="Label">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="8,8,8,4"/>
+            <Setter Property="Foreground" Value="#495057"/>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <TextBlock Text="{Binding WindowTitle}" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="#212529"
+                       VerticalAlignment="Center"/>
+            <Border Background="#28a745" 
+                    CornerRadius="12" 
+                    Padding="8,4" 
+                    Margin="16,0,0,0"
+                    Visibility="{Binding IsNewTask, Converter={StaticResource BoolToVisConverter}}">
+                <TextBlock Text="NEW" 
+                           FontSize="12" 
+                           FontWeight="Bold" 
+                           Foreground="White"/>
+            </Border>
+        </StackPanel>
+
+        <!-- Main Form -->
+        <ScrollViewer Grid.Row="1" 
+                      VerticalScrollBarVisibility="Auto"
+                      IsManipulationEnabled="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Column -->
+                <StackPanel Grid.Column="0">
+                    
+                    <!-- Task Name -->
+                    <Label Content="Task Name *" Style="{StaticResource TouchLabelStyle}"/>
+                    <TextBox Text="{Binding Task.Name, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource TouchTextBoxStyle}"
+                             Margin="8,0,8,16"/>
+                    
+                    <!-- Description -->
+                    <Label Content="Description" Style="{StaticResource TouchLabelStyle}"/>
+                    <TextBox Text="{Binding Task.Description, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource TouchTextBoxStyle}"
+                             Height="100"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             Margin="8,0,8,16"/>
+                    
+                    <!-- Start Date -->
+                    <Label Content="Start Date *" Style="{StaticResource TouchLabelStyle}"/>
+                    <DatePicker SelectedDate="{Binding Task.StartDate, UpdateSourceTrigger=PropertyChanged}" 
+                                Style="{StaticResource TouchDatePickerStyle}"
+                                Margin="8,0,8,16"/>
+                    
+                    <!-- End Date -->
+                    <Label Content="End Date *" Style="{StaticResource TouchLabelStyle}"/>
+                    <DatePicker SelectedDate="{Binding Task.EndDate, UpdateSourceTrigger=PropertyChanged}" 
+                                Style="{StaticResource TouchDatePickerStyle}"
+                                Margin="8,0,8,16"/>
+                    
+                    <!-- Duration Display -->
+                    <Label Content="Duration" Style="{StaticResource TouchLabelStyle}"/>
+                    <TextBlock Text="{Binding Task.DurationDisplay}" 
+                               FontSize="14"
+                               Foreground="#6c757d"
+                               Margin="8,0,8,16"
+                               Padding="12,8"/>
+                </StackPanel>
+
+                <!-- Right Column -->
+                <StackPanel Grid.Column="2">
+                    
+                    <!-- Status -->
+                    <Label Content="Status" Style="{StaticResource TouchLabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding StatusOptions}"
+                              SelectedItem="{Binding Task.Status, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource TouchComboBoxStyle}"
+                              Margin="8,0,8,16"/>
+                    
+                    <!-- Priority -->
+                    <Label Content="Priority" Style="{StaticResource TouchLabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding PriorityOptions}"
+                              SelectedItem="{Binding Task.Priority, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource TouchComboBoxStyle}"
+                              Margin="8,0,8,16"/>
+                    
+                    <!-- Progress -->
+                    <Label Content="Progress (%)" Style="{StaticResource TouchLabelStyle}"/>
+                    <Grid Margin="8,0,8,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider Grid.Column="0"
+                                Value="{Binding Task.Progress, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0"
+                                Maximum="100"
+                                TickFrequency="5"
+                                TickPlacement="BottomRight"
+                                IsSnapToTickEnabled="True"
+                                MinHeight="44"
+                                Margin="0,8"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Task.Progress, StringFormat={}{0}%}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Margin="8,0,0,0"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                    
+                    <!-- Assignee -->
+                    <Label Content="Assignee" Style="{StaticResource TouchLabelStyle}"/>
+                    <TextBox Text="{Binding Task.Assignee, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource TouchTextBoxStyle}"
+                             Margin="8,0,8,16"/>
+                    
+                    <!-- Estimated Hours -->
+                    <Label Content="Estimated Hours" Style="{StaticResource TouchLabelStyle}"/>
+                    <TextBox Text="{Binding Task.EstimatedHours, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource TouchTextBoxStyle}"
+                             Margin="8,0,8,16"/>
+                    
+                    <!-- Actual Hours -->
+                    <Label Content="Actual Hours" Style="{StaticResource TouchLabelStyle}"/>
+                    <TextBox Text="{Binding Task.ActualHours, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource TouchTextBoxStyle}"
+                             Margin="8,0,8,16"/>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            
+            <Button Content="Cancel" 
+                    Command="{Binding CancelCommand}"
+                    Style="{StaticResource TouchButtonStyle}"
+                    Background="#6c757d"/>
+            
+            <Button Content="{Binding SaveButtonText}" 
+                    Command="{Binding SaveCommand}"
+                    Style="{StaticResource TouchButtonStyle}"
+                    Background="#28a745"
+                    IsEnabled="{Binding CanSave}"/>
+        </StackPanel>
+    </Grid>
+</Window>

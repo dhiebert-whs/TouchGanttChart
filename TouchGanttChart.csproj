@@ -8,10 +8,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <ApplicationIcon>Resources\Images\app.ico</ApplicationIcon>
     <PlatformTarget>x64</PlatformTarget>
     <DebugType>portable</DebugType>
     <XamlDebuggingInformation Condition="'$(Configuration)' == 'Debug'">True</XamlDebuggingInformation>
+    <StartupObject>TouchGanttChart.App</StartupObject>
   </PropertyGroup>
 
   <!-- Core Dependencies -->
@@ -45,15 +45,6 @@
     <PackageReference Include="MahApps.Metro" Version="2.4.10" />
   </ItemGroup>
 
-  <!-- Testing Dependencies -->
-  <ItemGroup>
-    <PackageReference Include="xUnit" Version="2.4.2" />
-    <PackageReference Include="xUnit.runner.visualstudio" Version="2.4.5">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-  </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Resources\Images\**\*" />

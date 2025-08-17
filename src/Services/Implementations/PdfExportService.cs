@@ -1,5 +1,6 @@
 using IronPdf;
 using Microsoft.Extensions.Logging;
+using System.IO;
 using System.Text;
 using TouchGanttChart.Models;
 using TouchGanttChart.Services.Interfaces;
@@ -48,16 +49,16 @@ public class PdfExportService : IPdfExportService
             var renderer = new ChromePdfRenderer();
             
             // Configure PDF settings for professional output
-            renderer.RenderingOptions.PaperSize = PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = PdfPaperOrientation.Portrait;
+            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
+            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Portrait;
             renderer.RenderingOptions.MarginTop = 40;
             renderer.RenderingOptions.MarginBottom = 40;
             renderer.RenderingOptions.MarginLeft = 20;
             renderer.RenderingOptions.MarginRight = 20;
             renderer.RenderingOptions.PrintHtmlBackgrounds = true;
 
-            var pdf = await renderer.RenderHtmlAsPdfAsync(html);
-            await pdf.SaveAsAsync(filePath);
+            var pdf = renderer.RenderHtmlAsPdf(html);
+            pdf.SaveAs(filePath);
 
             _logger.LogInformation("Successfully exported project '{ProjectName}' to {FilePath}", 
                 project.Name, filePath);
@@ -89,16 +90,16 @@ public class PdfExportService : IPdfExportService
             var renderer = new ChromePdfRenderer();
             
             // Configure for landscape timeline view
-            renderer.RenderingOptions.PaperSize = PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = PdfPaperOrientation.Landscape;
+            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
+            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Landscape;
             renderer.RenderingOptions.MarginTop = 20;
             renderer.RenderingOptions.MarginBottom = 20;
             renderer.RenderingOptions.MarginLeft = 15;
             renderer.RenderingOptions.MarginRight = 15;
             renderer.RenderingOptions.PrintHtmlBackgrounds = true;
 
-            var pdf = await renderer.RenderHtmlAsPdfAsync(html);
-            await pdf.SaveAsAsync(filePath);
+            var pdf = renderer.RenderHtmlAsPdf(html);
+            pdf.SaveAs(filePath);
 
             _logger.LogInformation("Successfully exported timeline to {FilePath}", filePath);
 
@@ -126,16 +127,16 @@ public class PdfExportService : IPdfExportService
             var html = GenerateProjectSummaryHtml(project, statistics);
             var renderer = new ChromePdfRenderer();
             
-            renderer.RenderingOptions.PaperSize = PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = PdfPaperOrientation.Portrait;
+            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
+            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Portrait;
             renderer.RenderingOptions.MarginTop = 40;
             renderer.RenderingOptions.MarginBottom = 40;
             renderer.RenderingOptions.MarginLeft = 20;
             renderer.RenderingOptions.MarginRight = 20;
             renderer.RenderingOptions.PrintHtmlBackgrounds = true;
 
-            var pdf = await renderer.RenderHtmlAsPdfAsync(html);
-            await pdf.SaveAsAsync(filePath);
+            var pdf = renderer.RenderHtmlAsPdf(html);
+            pdf.SaveAs(filePath);
 
             _logger.LogInformation("Successfully exported project summary to {FilePath}", filePath);
 
@@ -163,16 +164,16 @@ public class PdfExportService : IPdfExportService
             var html = GenerateTaskListHtml(taskList);
             var renderer = new ChromePdfRenderer();
             
-            renderer.RenderingOptions.PaperSize = PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = PdfPaperOrientation.Portrait;
+            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
+            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Portrait;
             renderer.RenderingOptions.MarginTop = 40;
             renderer.RenderingOptions.MarginBottom = 40;
             renderer.RenderingOptions.MarginLeft = 20;
             renderer.RenderingOptions.MarginRight = 20;
             renderer.RenderingOptions.PrintHtmlBackgrounds = true;
 
-            var pdf = await renderer.RenderHtmlAsPdfAsync(html);
-            await pdf.SaveAsAsync(filePath);
+            var pdf = renderer.RenderHtmlAsPdf(html);
+            pdf.SaveAs(filePath);
 
             _logger.LogInformation("Successfully exported task list to {FilePath}", filePath);
 

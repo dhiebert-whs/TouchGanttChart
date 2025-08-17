@@ -4,6 +4,7 @@ using Moq;
 using TouchGanttChart.Models;
 using TouchGanttChart.Services.Interfaces;
 using TouchGanttChart.ViewModels;
+using Xunit;
 
 namespace UnitTests.ViewModels;
 
@@ -165,7 +166,7 @@ public class MainWindowViewModelTests
     {
         // Arrange
         _viewModel.SearchFilter = "test";
-        _viewModel.StatusFilter = TaskStatus.InProgress;
+        _viewModel.StatusFilter = TouchGanttChart.Models.TaskStatus.InProgress;
         _viewModel.PriorityFilter = TaskPriority.High;
         _viewModel.AssigneeFilter = "John Doe";
 
@@ -247,11 +248,11 @@ public class MainWindowViewModelTests
     public void StatusFilterOptions_ContainsAllTaskStatuses()
     {
         // Assert
-        MainWindowViewModel.StatusFilterOptions.Should().Contain(TaskStatus.NotStarted);
-        MainWindowViewModel.StatusFilterOptions.Should().Contain(TaskStatus.InProgress);
-        MainWindowViewModel.StatusFilterOptions.Should().Contain(TaskStatus.Completed);
-        MainWindowViewModel.StatusFilterOptions.Should().Contain(TaskStatus.OnHold);
-        MainWindowViewModel.StatusFilterOptions.Should().Contain(TaskStatus.Cancelled);
+        MainWindowViewModel.StatusFilterOptions.Should().Contain(TouchGanttChart.Models.TaskStatus.NotStarted);
+        MainWindowViewModel.StatusFilterOptions.Should().Contain(TouchGanttChart.Models.TaskStatus.InProgress);
+        MainWindowViewModel.StatusFilterOptions.Should().Contain(TouchGanttChart.Models.TaskStatus.Completed);
+        MainWindowViewModel.StatusFilterOptions.Should().Contain(TouchGanttChart.Models.TaskStatus.OnHold);
+        MainWindowViewModel.StatusFilterOptions.Should().Contain(TouchGanttChart.Models.TaskStatus.Cancelled);
     }
 
     [Fact]

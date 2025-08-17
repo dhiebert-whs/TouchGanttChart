@@ -1,5 +1,6 @@
 using FluentAssertions;
 using TouchGanttChart.Models;
+using Xunit;
 
 namespace UnitTests.Models;
 
@@ -21,7 +22,7 @@ public class ProjectTests
         project.StartDate.Should().Be(DateTime.Today);
         project.EndDate.Should().Be(DateTime.Today.AddMonths(1));
         project.ProjectManager.Should().BeEmpty();
-        project.Status.Should().Be(TaskStatus.NotStarted);
+        project.Status.Should().Be(TouchGanttChart.Models.TaskStatus.NotStarted);
         project.Priority.Should().Be(TaskPriority.Normal);
         project.Budget.Should().Be(0);
         project.ActualCost.Should().Be(0);
@@ -48,9 +49,9 @@ public class ProjectTests
     {
         // Arrange
         var project = new Project();
-        project.Tasks.Add(new GanttTask { Name = "Task 1", Status = TaskStatus.Completed });
-        project.Tasks.Add(new GanttTask { Name = "Task 2", Status = TaskStatus.InProgress });
-        project.Tasks.Add(new GanttTask { Name = "Task 3", Status = TaskStatus.Completed });
+        project.Tasks.Add(new GanttTask { Name = "Task 1", Status = TouchGanttChart.Models.TaskStatus.Completed });
+        project.Tasks.Add(new GanttTask { Name = "Task 2", Status = TouchGanttChart.Models.TaskStatus.InProgress });
+        project.Tasks.Add(new GanttTask { Name = "Task 3", Status = TouchGanttChart.Models.TaskStatus.Completed });
 
         // Act & Assert
         project.CompletedTaskCount.Should().Be(2);
@@ -61,10 +62,10 @@ public class ProjectTests
     {
         // Arrange
         var project = new Project();
-        project.Tasks.Add(new GanttTask { Name = "Task 1", Status = TaskStatus.Completed });
-        project.Tasks.Add(new GanttTask { Name = "Task 2", Status = TaskStatus.InProgress });
-        project.Tasks.Add(new GanttTask { Name = "Task 3", Status = TaskStatus.InProgress });
-        project.Tasks.Add(new GanttTask { Name = "Task 4", Status = TaskStatus.NotStarted });
+        project.Tasks.Add(new GanttTask { Name = "Task 1", Status = TouchGanttChart.Models.TaskStatus.Completed });
+        project.Tasks.Add(new GanttTask { Name = "Task 2", Status = TouchGanttChart.Models.TaskStatus.InProgress });
+        project.Tasks.Add(new GanttTask { Name = "Task 3", Status = TouchGanttChart.Models.TaskStatus.InProgress });
+        project.Tasks.Add(new GanttTask { Name = "Task 4", Status = TouchGanttChart.Models.TaskStatus.NotStarted });
 
         // Act & Assert
         project.InProgressTaskCount.Should().Be(2);
@@ -79,19 +80,19 @@ public class ProjectTests
         { 
             Name = "Task 1", 
             EndDate = DateTime.Today.AddDays(-1), 
-            Status = TaskStatus.InProgress 
+            Status = TouchGanttChart.Models.TaskStatus.InProgress 
         });
         project.Tasks.Add(new GanttTask 
         { 
             Name = "Task 2", 
             EndDate = DateTime.Today.AddDays(-2), 
-            Status = TaskStatus.Completed 
+            Status = TouchGanttChart.Models.TaskStatus.Completed 
         });
         project.Tasks.Add(new GanttTask 
         { 
             Name = "Task 3", 
             EndDate = DateTime.Today.AddDays(-1), 
-            Status = TaskStatus.NotStarted 
+            Status = TouchGanttChart.Models.TaskStatus.NotStarted 
         });
 
         // Act & Assert
@@ -103,10 +104,10 @@ public class ProjectTests
     {
         // Arrange
         var project = new Project();
-        project.Tasks.Add(new GanttTask { Name = "Task 1", Status = TaskStatus.Completed });
-        project.Tasks.Add(new GanttTask { Name = "Task 2", Status = TaskStatus.Completed });
-        project.Tasks.Add(new GanttTask { Name = "Task 3", Status = TaskStatus.InProgress });
-        project.Tasks.Add(new GanttTask { Name = "Task 4", Status = TaskStatus.NotStarted });
+        project.Tasks.Add(new GanttTask { Name = "Task 1", Status = TouchGanttChart.Models.TaskStatus.Completed });
+        project.Tasks.Add(new GanttTask { Name = "Task 2", Status = TouchGanttChart.Models.TaskStatus.Completed });
+        project.Tasks.Add(new GanttTask { Name = "Task 3", Status = TouchGanttChart.Models.TaskStatus.InProgress });
+        project.Tasks.Add(new GanttTask { Name = "Task 4", Status = TouchGanttChart.Models.TaskStatus.NotStarted });
 
         // Act & Assert
         project.ProgressPercentage.Should().Be(50.0); // 2 out of 4 tasks completed
@@ -146,7 +147,7 @@ public class ProjectTests
         var project = new Project
         {
             EndDate = DateTime.Today.AddDays(-1),
-            Status = TaskStatus.InProgress
+            Status = TouchGanttChart.Models.TaskStatus.InProgress
         };
 
         // Act & Assert
@@ -160,7 +161,7 @@ public class ProjectTests
         var project = new Project
         {
             EndDate = DateTime.Today.AddDays(-1),
-            Status = TaskStatus.Completed
+            Status = TouchGanttChart.Models.TaskStatus.Completed
         };
 
         // Act & Assert
@@ -222,18 +223,18 @@ public class ProjectTests
     }
 
     [Theory]
-    [InlineData(TaskStatus.Completed, "Completed")]
-    [InlineData(TaskStatus.InProgress, "At Risk")] // Assuming 50% progress for this test
+    [InlineData(TouchGanttChart.Models.TaskStatus.Completed, "Completed")]
+    [InlineData(TouchGanttChart.Models.TaskStatus.InProgress, "At Risk")] // Assuming 50% progress for this test
     public void HealthStatus_ReturnsCorrectStatus(TaskStatus status, string expectedHealth)
     {
         // Arrange
         var project = new Project { Status = status };
         
-        if (status == TaskStatus.InProgress)
+        if (status == TouchGanttChart.Models.TaskStatus.InProgress)
         {
             // Add tasks to get 50% progress
-            project.Tasks.Add(new GanttTask { Status = TaskStatus.Completed });
-            project.Tasks.Add(new GanttTask { Status = TaskStatus.InProgress });
+            project.Tasks.Add(new GanttTask { Status = TouchGanttChart.Models.TaskStatus.Completed });
+            project.Tasks.Add(new GanttTask { Status = TouchGanttChart.Models.TaskStatus.InProgress });
         }
 
         // Act & Assert
@@ -247,7 +248,7 @@ public class ProjectTests
         var project = new Project
         {
             EndDate = DateTime.Today.AddDays(-1),
-            Status = TaskStatus.InProgress
+            Status = TouchGanttChart.Models.TaskStatus.InProgress
         };
 
         // Act & Assert
@@ -278,10 +279,10 @@ public class ProjectTests
     {
         // Arrange
         var project = new Project();
-        project.Tasks.Add(new GanttTask { Status = TaskStatus.Completed });
-        project.Tasks.Add(new GanttTask { Status = TaskStatus.Completed });
-        project.Tasks.Add(new GanttTask { Status = TaskStatus.InProgress });
-        project.Tasks.Add(new GanttTask { Status = TaskStatus.NotStarted });
+        project.Tasks.Add(new GanttTask { Status = TouchGanttChart.Models.TaskStatus.Completed });
+        project.Tasks.Add(new GanttTask { Status = TouchGanttChart.Models.TaskStatus.Completed });
+        project.Tasks.Add(new GanttTask { Status = TouchGanttChart.Models.TaskStatus.InProgress });
+        project.Tasks.Add(new GanttTask { Status = TouchGanttChart.Models.TaskStatus.NotStarted });
 
         // Act & Assert
         project.ProgressDisplay.Should().Be("50.0%");

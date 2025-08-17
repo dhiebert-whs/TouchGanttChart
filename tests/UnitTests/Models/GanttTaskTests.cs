@@ -1,5 +1,6 @@
 using FluentAssertions;
 using TouchGanttChart.Models;
+using Xunit;
 
 namespace UnitTests.Models;
 
@@ -21,7 +22,7 @@ public class GanttTaskTests
         task.StartDate.Should().Be(DateTime.Today);
         task.EndDate.Should().Be(DateTime.Today.AddDays(1));
         task.Progress.Should().Be(0);
-        task.Status.Should().Be(TaskStatus.NotStarted);
+        task.Status.Should().Be(TouchGanttChart.Models.TaskStatus.NotStarted);
         task.Priority.Should().Be(TaskPriority.Normal);
         task.Assignee.Should().BeEmpty();
         task.EstimatedHours.Should().Be(0);
@@ -59,7 +60,7 @@ public class GanttTaskTests
         var task = new GanttTask
         {
             EndDate = DateTime.Today.AddDays(-1),
-            Status = TaskStatus.InProgress
+            Status = TouchGanttChart.Models.TaskStatus.InProgress
         };
 
         // Act & Assert
@@ -73,7 +74,7 @@ public class GanttTaskTests
         var task = new GanttTask
         {
             EndDate = DateTime.Today.AddDays(-1),
-            Status = TaskStatus.Completed
+            Status = TouchGanttChart.Models.TaskStatus.Completed
         };
 
         // Act & Assert
@@ -87,7 +88,7 @@ public class GanttTaskTests
         var task = new GanttTask
         {
             EndDate = DateTime.Today.AddDays(1),
-            Status = TaskStatus.InProgress
+            Status = TouchGanttChart.Models.TaskStatus.InProgress
         };
 
         // Act & Assert
@@ -191,7 +192,7 @@ public class GanttTaskTests
             StartDate = startDate,
             EndDate = endDate,
             Progress = 50,
-            Status = TaskStatus.InProgress,
+            Status = TouchGanttChart.Models.TaskStatus.InProgress,
             Priority = TaskPriority.High,
             Assignee = "John Doe",
             EstimatedHours = 40,
@@ -213,7 +214,7 @@ public class GanttTaskTests
         task.StartDate.Should().Be(startDate);
         task.EndDate.Should().Be(endDate);
         task.Progress.Should().Be(50);
-        task.Status.Should().Be(TaskStatus.InProgress);
+        task.Status.Should().Be(TouchGanttChart.Models.TaskStatus.InProgress);
         task.Priority.Should().Be(TaskPriority.High);
         task.Assignee.Should().Be("John Doe");
         task.EstimatedHours.Should().Be(40);

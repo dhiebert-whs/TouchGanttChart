@@ -698,9 +698,9 @@ public class DataService : IDataService
             var statistics = new ProjectStatistics
             {
                 TotalTasks = tasks.Count,
-                CompletedTasks = tasks.Count(t => t.Status == TaskStatus.Completed),
-                InProgressTasks = tasks.Count(t => t.Status == TaskStatus.InProgress),
-                OverdueTasks = tasks.Count(t => t.EndDate < DateTime.Today && t.Status != TaskStatus.Completed),
+                CompletedTasks = tasks.Count(t => t.Status == Models.TaskStatus.Completed),
+                InProgressTasks = tasks.Count(t => t.Status == Models.TaskStatus.InProgress),
+                OverdueTasks = tasks.Count(t => t.EndDate < DateTime.Today && t.Status != Models.TaskStatus.Completed),
                 TotalEstimatedHours = tasks.Sum(t => t.EstimatedHours),
                 TotalActualHours = tasks.Sum(t => t.ActualHours),
                 EarliestStartDate = tasks.Min(t => t.StartDate),

@@ -15,6 +15,10 @@
         IsManipulationEnabled="True"
         WindowState="Maximized">
     
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+    </Window.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -149,7 +153,7 @@
                     <ProgressBar Width="120" 
                                  Height="16"
                                  IsIndeterminate="{Binding IsLoading}"
-                                 Visibility="{Binding IsLoading, Converter={x:Static BooleanToVisibilityConverter.Instance}}"/>
+                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"/>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using TouchGanttChart.Data;
 using TouchGanttChart.Models;
+using Xunit;
 
 namespace IntegrationTests.Data;
 
@@ -34,7 +35,7 @@ public class AppDbContextTests : IDisposable
             ProjectManager = "Test Manager",
             StartDate = DateTime.Today,
             EndDate = DateTime.Today.AddMonths(1),
-            Status = TaskStatus.NotStarted,
+            Status = TouchGanttChart.Models.TaskStatus.NotStarted,
             Priority = TaskPriority.Normal,
             Budget = 10000m
         };
@@ -72,7 +73,7 @@ public class AppDbContextTests : IDisposable
             Description = "Test Description",
             StartDate = DateTime.Today,
             EndDate = DateTime.Today.AddDays(5),
-            Status = TaskStatus.NotStarted,
+            Status = TouchGanttChart.Models.TaskStatus.NotStarted,
             Priority = TaskPriority.Normal,
             Progress = 0,
             ProjectId = project.Id,
