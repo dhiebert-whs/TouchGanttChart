@@ -58,6 +58,12 @@ public class GanttTask
     public string Assignee { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the task category (e.g., Mechanical, Electrical, Software, etc.).
+    /// </summary>
+    [StringLength(50, ErrorMessage = "Category name cannot exceed 50 characters")]
+    public string Category { get; set; } = "General";
+
+    /// <summary>
     /// Gets or sets the estimated effort in hours.
     /// </summary>
     [Range(0, double.MaxValue, ErrorMessage = "Estimated hours must be non-negative")]

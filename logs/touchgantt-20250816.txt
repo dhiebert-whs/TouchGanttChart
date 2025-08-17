@@ -209,3 +209,399 @@ https://ironpdf.com/licensing/?utm_source=product
 [2025-08-16 19:42:28.244 INF] Shutting down application
 [2025-08-16 19:42:28.252 INF] Application is shutting down...
 [2025-08-16 19:42:28.286 INF] Application shutdown complete
+[2025-08-16 21:38:15.060 INF] Starting Touch Gantt Chart application
+[2025-08-16 21:38:15.371 INF] Initializing database
+[2025-08-16 21:38:16.545 INF] Executed DbCommand (35ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+[2025-08-16 21:38:16.573 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA journal_mode = WAL;
+[2025-08-16 21:38:16.579 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA synchronous = NORMAL;
+[2025-08-16 21:38:16.582 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA temp_store = MEMORY;
+[2025-08-16 21:38:16.583 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA mmap_size = 268435456;
+[2025-08-16 21:38:16.584 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA cache_size = 10000;
+[2025-08-16 21:38:16.585 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA foreign_keys = ON;
+[2025-08-16 21:38:16.990 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Projects" AS "p")
+[2025-08-16 21:38:16.998 INF] Database initialization completed
+[2025-08-16 21:38:17.024 INF] Application started. Press Ctrl+C to shut down.
+[2025-08-16 21:38:17.026 INF] Hosting environment: Production
+[2025-08-16 21:38:17.026 INF] Content root path: C:\Users\dhiebert\Local Repositories\TouchGanttChart
+[2025-08-16 21:38:19.408 INF] MainWindow initialized
+[2025-08-16 21:38:20.652 INF] MainWindow loading - initializing view model
+[2025-08-16 21:38:20.992 INF] Initializing MainWindowViewModel
+[2025-08-16 21:38:20.999 INF] Retrieving all projects
+[2025-08-16 21:38:21.295 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status"
+FROM "Projects" AS "p"
+LEFT JOIN "Tasks" AS "t" ON "p"."Id" = "t"."ProjectId"
+ORDER BY "p"."Name", "p"."Id"
+[2025-08-16 21:38:21.545 INF] Retrieved 1 projects
+[2025-08-16 21:38:21.546 INF] Status set in MainWindowViewModel: Loaded 1 projects
+[2025-08-16 21:38:21.548 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:38:21.580 WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+[2025-08-16 21:38:21.648 INF] Executed DbCommand (5ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:38:21.665 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:38:21.689 INF] Successfully initialized MainWindowViewModel
+[2025-08-16 21:38:21.690 INF] MainWindow loaded successfully
+[2025-08-16 21:38:21.725 INF] Application started successfully
+[2025-08-16 21:39:09.780 INF] Starting Touch Gantt Chart application
+[2025-08-16 21:39:10.185 INF] Initializing database
+[2025-08-16 21:39:10.903 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+[2025-08-16 21:39:10.913 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA journal_mode = WAL;
+[2025-08-16 21:39:10.915 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA synchronous = NORMAL;
+[2025-08-16 21:39:10.916 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA temp_store = MEMORY;
+[2025-08-16 21:39:10.916 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA mmap_size = 268435456;
+[2025-08-16 21:39:10.917 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA cache_size = 10000;
+[2025-08-16 21:39:10.917 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA foreign_keys = ON;
+[2025-08-16 21:39:11.079 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Projects" AS "p")
+[2025-08-16 21:39:11.085 INF] Database initialization completed
+[2025-08-16 21:39:11.104 INF] Application started. Press Ctrl+C to shut down.
+[2025-08-16 21:39:11.105 INF] Hosting environment: Production
+[2025-08-16 21:39:11.106 INF] Content root path: C:\Users\dhiebert\Local Repositories\TouchGanttChart
+[2025-08-16 21:39:11.866 INF] MainWindow initialized
+[2025-08-16 21:39:12.476 INF] MainWindow loading - initializing view model
+[2025-08-16 21:39:12.525 INF] Initializing MainWindowViewModel
+[2025-08-16 21:39:12.534 INF] Retrieving all projects
+[2025-08-16 21:39:12.790 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status"
+FROM "Projects" AS "p"
+LEFT JOIN "Tasks" AS "t" ON "p"."Id" = "t"."ProjectId"
+ORDER BY "p"."Name", "p"."Id"
+[2025-08-16 21:39:13.054 INF] Retrieved 1 projects
+[2025-08-16 21:39:13.055 INF] Status set in MainWindowViewModel: Loaded 1 projects
+[2025-08-16 21:39:13.059 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:39:13.118 WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+[2025-08-16 21:39:13.147 INF] Executed DbCommand (2ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:39:13.153 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:39:13.172 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:39:13.179 INF] Successfully initialized MainWindowViewModel
+[2025-08-16 21:39:13.180 INF] MainWindow loaded successfully
+[2025-08-16 21:39:13.308 INF] Application started successfully
+[2025-08-16 21:40:11.948 INF] Task edit dialog configured for task: 1 - Project Planning
+[2025-08-16 21:40:32.150 INF] Updating task 'Project Planning' (ID: 1)
+[2025-08-16 21:40:32.284 INF] Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-16 21:40:32.291 INF] Updated task 'Project Planning'
+[2025-08-16 21:40:32.291 INF] Updated task: 1 - Project Planning
+[2025-08-16 21:40:32.300 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:40:32.305 INF] Executed DbCommand (0ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:40:32.306 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:40:32.324 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:40:32.324 INF] Status set in MainWindowViewModel: Task updated successfully
+[2025-08-16 21:40:39.616 INF] Task edit dialog configured for task: 3 - UI Framework Setup
+[2025-08-16 21:40:48.907 INF] Updating task 'UI Framework Setup' (ID: 3)
+[2025-08-16 21:40:48.927 INF] Executed DbCommand (17ms) [Parameters=[@p2='?' (DbType = Int32), @p0='?' (DbType = DateTime), @p1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0, "Progress" = @p1
+WHERE "Id" = @p2
+RETURNING 1;
+[2025-08-16 21:40:48.930 INF] Updated task 'UI Framework Setup'
+[2025-08-16 21:40:48.931 INF] Updated task: 3 - UI Framework Setup
+[2025-08-16 21:40:48.967 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:40:48.973 INF] Executed DbCommand (2ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:40:48.977 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:40:49.003 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:40:49.003 INF] Status set in MainWindowViewModel: Task updated successfully
+[2025-08-16 21:40:59.665 INF] Task dependency dialog configured for task: 5 - Touch Gesture Implementation
+[2025-08-16 21:41:26.385 INF] Task dependency editing cancelled
+[2025-08-16 21:41:37.232 INF] Task dependency dialog configured for task: 4 - Gantt Chart Visualization
+[2025-08-16 21:41:40.964 INF] Updating task 'Gantt Chart Visualization' (ID: 4)
+[2025-08-16 21:41:41.037 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskDependencies" ("DependentTaskId", "PrerequisiteTaskId")
+VALUES (@p0, @p1);
+[2025-08-16 21:41:41.038 INF] Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-16 21:41:41.045 INF] Updated task 'Gantt Chart Visualization'
+[2025-08-16 21:41:41.045 INF] Successfully updated dependencies for task: 4
+[2025-08-16 21:41:41.064 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:41:41.066 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:41:41.069 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:41:41.081 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:41:41.081 INF] Status set in MainWindowViewModel: Task dependencies updated successfully
+[2025-08-16 21:42:14.227 INF] Task dependency dialog configured for task: 6 - Testing & Optimization
+[2025-08-16 21:42:27.004 INF] Task dependency editing cancelled
+[2025-08-16 21:42:30.410 INF] Task dependency dialog configured for task: 5 - Touch Gesture Implementation
+[2025-08-16 21:42:34.280 INF] Updating task 'Touch Gesture Implementation' (ID: 5)
+[2025-08-16 21:42:34.283 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskDependencies" ("DependentTaskId", "PrerequisiteTaskId")
+VALUES (@p0, @p1);
+[2025-08-16 21:42:34.284 INF] Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-16 21:42:34.285 INF] Updated task 'Touch Gesture Implementation'
+[2025-08-16 21:42:34.286 INF] Successfully updated dependencies for task: 5
+[2025-08-16 21:42:34.308 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:42:34.311 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:42:34.312 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:42:34.344 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:42:34.345 INF] Status set in MainWindowViewModel: Task dependencies updated successfully
+[2025-08-16 21:42:41.956 INF] Task dependency dialog configured for task: 6 - Testing & Optimization
+[2025-08-16 21:42:46.927 INF] Updating task 'Testing & Optimization' (ID: 6)
+[2025-08-16 21:42:46.929 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskDependencies" ("DependentTaskId", "PrerequisiteTaskId")
+VALUES (@p0, @p1);
+[2025-08-16 21:42:46.930 INF] Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-16 21:42:46.930 INF] Updated task 'Testing & Optimization'
+[2025-08-16 21:42:46.931 INF] Successfully updated dependencies for task: 6
+[2025-08-16 21:42:46.952 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:42:46.955 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:42:46.957 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:42:46.977 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:42:46.977 INF] Status set in MainWindowViewModel: Task dependencies updated successfully
+[2025-08-16 21:42:56.387 INF] Task dependency dialog configured for task: 5 - Touch Gesture Implementation
+[2025-08-16 21:43:02.274 INF] Updating task 'Touch Gesture Implementation' (ID: 5)
+[2025-08-16 21:43:02.285 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+DELETE FROM "TaskDependencies"
+WHERE "DependentTaskId" = @p0 AND "PrerequisiteTaskId" = @p1
+RETURNING 1;
+[2025-08-16 21:43:02.285 INF] Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-16 21:43:02.290 INF] Updated task 'Touch Gesture Implementation'
+[2025-08-16 21:43:02.291 INF] Successfully updated dependencies for task: 5
+[2025-08-16 21:43:02.314 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:43:02.316 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:43:02.317 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:43:02.335 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:43:02.335 INF] Status set in MainWindowViewModel: Task dependencies updated successfully
+[2025-08-16 21:43:10.938 INF] Task edit dialog configured for task: 4 - Gantt Chart Visualization
+[2025-08-16 21:43:15.302 INF] Task editing cancelled
+[2025-08-16 21:43:21.197 INF] Task edit dialog configured for task: 5 - Touch Gesture Implementation
+[2025-08-16 21:43:29.937 INF] Updating task 'Touch Gesture Implementation' (ID: 5)
+[2025-08-16 21:43:29.940 INF] Executed DbCommand (0ms) [Parameters=[@p2='?' (DbType = Int32), @p0='?' (DbType = DateTime), @p1='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0, "StartDate" = @p1
+WHERE "Id" = @p2
+RETURNING 1;
+[2025-08-16 21:43:29.941 INF] Updated task 'Touch Gesture Implementation'
+[2025-08-16 21:43:29.941 INF] Updated task: 5 - Touch Gesture Implementation
+[2025-08-16 21:43:29.971 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:43:29.973 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:43:29.975 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:43:29.994 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:43:29.994 INF] Status set in MainWindowViewModel: Task updated successfully
+[2025-08-16 21:43:47.723 INF] Task dependency dialog configured for task: 5 - Touch Gesture Implementation
+[2025-08-16 21:43:55.090 INF] Updating task 'Touch Gesture Implementation' (ID: 5)
+[2025-08-16 21:43:55.092 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskDependencies" ("DependentTaskId", "PrerequisiteTaskId")
+VALUES (@p0, @p1);
+[2025-08-16 21:43:55.093 INF] Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-16 21:43:55.095 INF] Updated task 'Touch Gesture Implementation'
+[2025-08-16 21:43:55.095 INF] Successfully updated dependencies for task: 5
+[2025-08-16 21:43:55.126 INF] Retrieving tasks for project ID 1
+[2025-08-16 21:43:55.130 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-16 21:43:55.131 INF] Retrieved 6 tasks for project ID 1
+[2025-08-16 21:43:55.148 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-16 21:43:55.149 INF] Status set in MainWindowViewModel: Task dependencies updated successfully
+[2025-08-16 21:44:07.626 INF] Status set in MainWindowViewModel: Saving project...
+[2025-08-16 21:44:07.629 INF] Updating project 'Touch Gantt Chart Development' (ID: 1)
+[2025-08-16 21:44:07.631 INF] Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Projects" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-16 21:44:07.632 INF] Updated project 'Touch Gantt Chart Development'
+[2025-08-16 21:44:07.632 INF] Status set in MainWindowViewModel: Project saved successfully
+[2025-08-16 21:44:22.345 INF] MainWindow closing - cleaning up view model
+[2025-08-16 21:44:22.347 INF] Cleaning up MainWindowViewModel
+[2025-08-16 21:44:22.347 INF] Successfully cleaned up MainWindowViewModel
+[2025-08-16 21:44:22.348 INF] MainWindow cleanup completed
+[2025-08-16 21:44:22.458 INF] Shutting down application
+[2025-08-16 21:44:22.472 INF] Application is shutting down...
+[2025-08-16 21:44:22.510 INF] Application shutdown complete

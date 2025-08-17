@@ -51,6 +51,23 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
     public static readonly ReadOnlyCollection<TaskPriority> PriorityOptions = new(
         Enum.GetValues<TaskPriority>().ToList());
 
+    /// <summary>
+    /// Available task category options
+    /// </summary>
+    public static readonly ReadOnlyCollection<string> CategoryOptions = new(new[]
+    {
+        "General",
+        "Mechanical",
+        "Electrical",
+        "Software",
+        "Documentation",
+        "Testing",
+        "Design",
+        "Research",
+        "Planning",
+        "Marketing"
+    });
+
     public TaskEditDialogViewModel(IDataService dataService, ILogger<TaskEditDialogViewModel> logger)
     {
         _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));

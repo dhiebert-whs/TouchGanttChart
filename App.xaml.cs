@@ -119,11 +119,14 @@ public partial class App : Application
                 // Register services
                 services.AddSingleton<IDataService, DataService>();
                 services.AddSingleton<IPdfExportService, PdfExportService>();
+                services.AddSingleton<IProjectTemplateService, ProjectTemplateService>();
                 services.AddTransient<ITouchGestureService, TouchGestureService>();
 
                 // Register ViewModels
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddTransient<TaskEditDialogViewModel>();
+                services.AddTransient<TaskDependencyDialogViewModel>();
+                services.AddTransient<ProjectTemplateSelectionViewModel>();
 
                 // Register Views
                 services.AddSingleton<MainWindow>();

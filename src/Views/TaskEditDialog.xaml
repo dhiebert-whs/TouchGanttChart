@@ -202,6 +202,14 @@
                              Style="{StaticResource TouchTextBoxStyle}"
                              Margin="8,0,8,16"/>
                     
+                    <!-- Category -->
+                    <Label Content="Category" Style="{StaticResource TouchLabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding CategoryOptions}"
+                              Text="{Binding Task.Category, UpdateSourceTrigger=PropertyChanged}"
+                              IsEditable="True"
+                              Style="{StaticResource TouchComboBoxStyle}"
+                              Margin="8,0,8,16"/>
+                    
                     <!-- Estimated Hours -->
                     <Label Content="Estimated Hours" Style="{StaticResource TouchLabelStyle}"/>
                     <TextBox Text="{Binding Task.EstimatedHours, UpdateSourceTrigger=PropertyChanged}" 

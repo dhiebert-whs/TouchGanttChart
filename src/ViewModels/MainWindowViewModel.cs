@@ -80,7 +80,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets or sets the current timeline view mode.
     /// </summary>
     [ObservableProperty]
-    private string _timelineView = "Weekly";
+    private TimelineViewMode _viewMode = TimelineViewMode.Weekly;
 
     /// <summary>
     /// Gets or sets the zoom level for the timeline.
@@ -210,6 +210,18 @@ public partial class MainWindowViewModel : ViewModelBase
     private IRelayCommand? _clearFiltersCommand;
 
     /// <summary>
+    /// Gets the command to manage task dependencies.
+    /// </summary>
+    [ObservableProperty]
+    private IRelayCommand? _manageDependenciesCommand;
+
+    /// <summary>
+    /// Gets the command to change timeline view mode.
+    /// </summary>
+    [ObservableProperty]
+    private IRelayCommand<TimelineViewMode>? _changeViewModeCommand;
+
+    /// <summary>
     /// Initializes all relay commands.
     /// </summary>
     private void InitializeCommands()
@@ -226,6 +238,8 @@ public partial class MainWindowViewModel : ViewModelBase
         ZoomResetCommand = new RelayCommand(ResetZoom);
         ToggleTaskDetailsPanelCommand = new RelayCommand(ToggleTaskDetailsPanel);
         ClearFiltersCommand = new RelayCommand(ClearFilters);
+        ManageDependenciesCommand = new AsyncRelayCommand(ManageDependenciesAsync, () => SelectedTask != null);
+        ChangeViewModeCommand = new RelayCommand<TimelineViewMode>(ChangeViewMode);
     }
 
     /// <summary>
@@ -265,6 +279,7 @@ public partial class MainWindowViewModel : ViewModelBase
         EditTaskCommand?.NotifyCanExecuteChanged();
         DeleteTaskCommand?.NotifyCanExecuteChanged();
         ExportPdfCommand?.NotifyCanExecuteChanged();
+        ManageDependenciesCommand?.NotifyCanExecuteChanged();
     }
 
     /// <summary>
@@ -346,13 +361,33 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Creates a new project.
+    /// Creates a new project using the template selection dialog.
     /// </summary>
     private async Task CreateNewProjectAsync()
     {
-        // TODO: Show project creation dialog
-        await Task.CompletedTask;
-        SetStatus("Create new project functionality will be implemented");
+        try
+        {
+            var mainWindow = Application.Current.MainWindow;
+            var dialog = ProjectTemplateSelectionDialog.Create(_serviceProvider, mainWindow);
+            
+            var result = dialog.ShowDialog();
+            
+            if (result == true && dialog.CreatedProject != null)
+            {
+                // Reload projects to include the new one
+                await LoadProjectsAsync();
+                
+                // Select the newly created project
+                SelectedProject = Projects.FirstOrDefault(p => p.Id == dialog.CreatedProject.Id);
+                
+                SetStatus($"Project '{dialog.CreatedProject.Name}' created successfully from template");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening project template selection dialog");
+            SetStatus("Failed to open project creation dialog");
+        }
     }
 
     /// <summary>
@@ -513,6 +548,34 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Opens the task dependency management dialog.
+    /// </summary>
+    private async Task ManageDependenciesAsync()
+    {
+        if (SelectedTask == null) return;
+        
+        try
+        {
+            var mainWindow = Application.Current.MainWindow;
+            var dialog = TaskDependencyDialog.Create(_serviceProvider, SelectedTask, Tasks, mainWindow);
+            
+            var result = dialog.ShowDialog();
+            
+            if (result == true)
+            {
+                // Reload tasks to refresh dependency data
+                await LoadTasksForProjectAsync(SelectedProject?.Id ?? SelectedTask.ProjectId);
+                SetStatus("Task dependencies updated successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening task dependency dialog");
+            SetStatus("Failed to open task dependency dialog");
+        }
+    }
+
+    /// <summary>
     /// Applies current filters to the task list.
     /// </summary>
     private void ApplyFilters()
@@ -546,12 +609,31 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Changes the timeline view mode.
+    /// </summary>
+    /// <param name="newMode">The new view mode.</param>
+    private void ChangeViewMode(TimelineViewMode newMode)
+    {
+        ViewMode = newMode;
+        
+        // Adjust timeline range based on view mode
+        if (SelectedProject != null && Tasks.Count > 0)
+        {
+            var projectDuration = (int)(Tasks.Max(t => t.EndDate) - Tasks.Min(t => t.StartDate)).TotalDays;
+            var padding = TimelineViewConfig.GetTimeUnitDays(newMode);
+            
+            TimelineStart = Tasks.Min(t => t.StartDate).AddDays(-padding);
+            TimelineEnd = Tasks.Max(t => t.EndDate).AddDays(padding);
+        }
+        
+        SetStatus($"Timeline view changed to {TimelineViewConfig.GetDisplayName(newMode)}");
+        _logger.LogInformation("Timeline view mode changed to {ViewMode}", newMode);
+    }
+
+    /// <summary>
     /// Gets the available timeline view options.
     /// </summary>
-    public static IReadOnlyList<string> TimelineViewOptions { get; } = new[]
-    {
-        "Daily", "Weekly", "Monthly", "Quarterly"
-    };
+    public static IReadOnlyList<TimelineViewMode> TimelineViewOptions { get; } = TimelineViewConfig.GetAllModes();
 
     /// <summary>
     /// Gets the available task status options for filtering.

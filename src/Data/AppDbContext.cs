@@ -20,6 +20,16 @@ public class AppDbContext : DbContext
     public DbSet<GanttTask> Tasks { get; set; } = null!;
 
     /// <summary>
+    /// Gets or sets the project templates in the application.
+    /// </summary>
+    public DbSet<ProjectTemplate> ProjectTemplates { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the task templates in the application.
+    /// </summary>
+    public DbSet<TaskTemplate> TaskTemplates { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of the AppDbContext class.
     /// </summary>
     public AppDbContext()
@@ -69,6 +79,9 @@ public class AppDbContext : DbContext
         ConfigureProject(modelBuilder);
         ConfigureGanttTask(modelBuilder);
         ConfigureTaskDependencies(modelBuilder);
+        ConfigureProjectTemplate(modelBuilder);
+        ConfigureTaskTemplate(modelBuilder);
+        ConfigureTaskTemplateDependencies(modelBuilder);
         
         base.OnModelCreating(modelBuilder);
     }
@@ -125,6 +138,7 @@ public class AppDbContext : DbContext
             entity.Property(t => t.Name).IsRequired().HasMaxLength(200);
             entity.Property(t => t.Description).HasMaxLength(1000);
             entity.Property(t => t.Assignee).HasMaxLength(100);
+            entity.Property(t => t.Category).HasMaxLength(50).HasDefaultValue("General");
             
             // Decimal precision for hours
             entity.Property(t => t.EstimatedHours).HasPrecision(10, 2);
@@ -141,6 +155,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(t => t.Priority);
             entity.HasIndex(t => t.Progress);
             entity.HasIndex(t => t.Assignee);
+            entity.HasIndex(t => t.Category);
             entity.HasIndex(t => t.ParentTaskId);
             entity.HasIndex(t => t.ProjectId);
             entity.HasIndex(t => t.CreatedDate);
@@ -307,5 +322,188 @@ public class AppDbContext : DbContext
             Tasks.AddRange(tasks);
             await SaveChangesAsync();
         }
+
+        // Seed project templates
+        if (!await ProjectTemplates.AnyAsync())
+        {
+            await SeedProjectTemplatesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Seeds sample project templates for development.
+    /// </summary>
+    private async Task SeedProjectTemplatesAsync()
+    {
+        var templates = new[]
+        {
+            new ProjectTemplate
+            {
+                Name = "Software Development Project",
+                Description = "Standard software development project with planning, development, testing, and deployment phases",
+                Category = "Software Development",
+                EstimatedDurationDays = 90,
+                EstimatedBudget = 75000m,
+                IsBuiltIn = true,
+                Icon = "💻",
+                TaskTemplates = new List<TaskTemplate>
+                {
+                    new() { Name = "Project Planning", Description = "Initial project planning and requirements gathering", EstimatedDurationDays = 5, StartOffsetDays = 0, Order = 1, Priority = TaskPriority.High, DefaultAssigneeRole = "Project Manager", EstimatedHours = 40 },
+                    new() { Name = "System Design", Description = "Design system architecture and technical specifications", EstimatedDurationDays = 10, StartOffsetDays = 5, Order = 2, Priority = TaskPriority.High, DefaultAssigneeRole = "Architect", EstimatedHours = 80 },
+                    new() { Name = "Development Phase 1", Description = "Core functionality development", EstimatedDurationDays = 30, StartOffsetDays = 15, Order = 3, Priority = TaskPriority.High, DefaultAssigneeRole = "Developer", EstimatedHours = 240 },
+                    new() { Name = "Testing Phase 1", Description = "Unit and integration testing", EstimatedDurationDays = 10, StartOffsetDays = 45, Order = 4, Priority = TaskPriority.High, DefaultAssigneeRole = "QA Engineer", EstimatedHours = 80 },
+                    new() { Name = "Development Phase 2", Description = "Additional features and refinements", EstimatedDurationDays = 20, StartOffsetDays = 55, Order = 5, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Developer", EstimatedHours = 160 },
+                    new() { Name = "Final Testing", Description = "System testing and user acceptance testing", EstimatedDurationDays = 10, StartOffsetDays = 75, Order = 6, Priority = TaskPriority.High, DefaultAssigneeRole = "QA Engineer", EstimatedHours = 80 },
+                    new() { Name = "Deployment", Description = "Production deployment and go-live", EstimatedDurationDays = 5, StartOffsetDays = 85, Order = 7, Priority = TaskPriority.Critical, DefaultAssigneeRole = "DevOps Engineer", EstimatedHours = 40, IsMilestone = true }
+                }
+            },
+            new ProjectTemplate
+            {
+                Name = "Marketing Campaign",
+                Description = "Complete marketing campaign from strategy to execution and analysis",
+                Category = "Marketing",
+                EstimatedDurationDays = 60,
+                EstimatedBudget = 25000m,
+                IsBuiltIn = true,
+                Icon = "📈",
+                TaskTemplates = new List<TaskTemplate>
+                {
+                    new() { Name = "Market Research", Description = "Conduct market analysis and competitor research", EstimatedDurationDays = 7, StartOffsetDays = 0, Order = 1, Priority = TaskPriority.High, DefaultAssigneeRole = "Marketing Analyst", EstimatedHours = 56 },
+                    new() { Name = "Strategy Development", Description = "Develop campaign strategy and messaging", EstimatedDurationDays = 5, StartOffsetDays = 7, Order = 2, Priority = TaskPriority.High, DefaultAssigneeRole = "Marketing Manager", EstimatedHours = 40 },
+                    new() { Name = "Creative Development", Description = "Create campaign assets and materials", EstimatedDurationDays = 14, StartOffsetDays = 12, Order = 3, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Creative Director", EstimatedHours = 112 },
+                    new() { Name = "Channel Setup", Description = "Set up advertising channels and platforms", EstimatedDurationDays = 3, StartOffsetDays = 26, Order = 4, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Digital Marketer", EstimatedHours = 24 },
+                    new() { Name = "Campaign Launch", Description = "Launch marketing campaign across all channels", EstimatedDurationDays = 1, StartOffsetDays = 29, Order = 5, Priority = TaskPriority.Critical, DefaultAssigneeRole = "Marketing Manager", EstimatedHours = 8, IsMilestone = true },
+                    new() { Name = "Campaign Monitoring", Description = "Monitor campaign performance and optimization", EstimatedDurationDays = 21, StartOffsetDays = 30, Order = 6, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Digital Marketer", EstimatedHours = 84 },
+                    new() { Name = "Analysis & Reporting", Description = "Analyze results and create performance report", EstimatedDurationDays = 7, StartOffsetDays = 51, Order = 7, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Marketing Analyst", EstimatedHours = 35 }
+                }
+            },
+            new ProjectTemplate
+            {
+                Name = "Event Planning",
+                Description = "Comprehensive event planning template for conferences, meetings, and corporate events",
+                Category = "Event Management",
+                EstimatedDurationDays = 45,
+                EstimatedBudget = 30000m,
+                IsBuiltIn = true,
+                Icon = "🎉",
+                TaskTemplates = new List<TaskTemplate>
+                {
+                    new() { Name = "Event Concept", Description = "Define event concept, goals, and requirements", EstimatedDurationDays = 3, StartOffsetDays = 0, Order = 1, Priority = TaskPriority.High, DefaultAssigneeRole = "Event Manager", EstimatedHours = 24 },
+                    new() { Name = "Venue Selection", Description = "Research and book appropriate venue", EstimatedDurationDays = 7, StartOffsetDays = 3, Order = 2, Priority = TaskPriority.High, DefaultAssigneeRole = "Event Coordinator", EstimatedHours = 35 },
+                    new() { Name = "Vendor Management", Description = "Select and coordinate with vendors (catering, AV, etc.)", EstimatedDurationDays = 10, StartOffsetDays = 10, Order = 3, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Event Coordinator", EstimatedHours = 50 },
+                    new() { Name = "Marketing & Promotion", Description = "Create promotional materials and marketing campaign", EstimatedDurationDays = 14, StartOffsetDays = 20, Order = 4, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Marketing Specialist", EstimatedHours = 70 },
+                    new() { Name = "Registration Setup", Description = "Set up registration system and attendee management", EstimatedDurationDays = 3, StartOffsetDays = 25, Order = 5, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Event Coordinator", EstimatedHours = 20 },
+                    new() { Name = "Final Preparations", Description = "Finalize all event details and contingency planning", EstimatedDurationDays = 5, StartOffsetDays = 35, Order = 6, Priority = TaskPriority.High, DefaultAssigneeRole = "Event Manager", EstimatedHours = 40 },
+                    new() { Name = "Event Execution", Description = "Execute the event and manage on-site operations", EstimatedDurationDays = 1, StartOffsetDays = 40, Order = 7, Priority = TaskPriority.Critical, DefaultAssigneeRole = "Event Manager", EstimatedHours = 12, IsMilestone = true },
+                    new() { Name = "Post-Event Follow-up", Description = "Post-event analysis, feedback collection, and reporting", EstimatedDurationDays = 3, StartOffsetDays = 41, Order = 8, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Event Manager", EstimatedHours = 20 }
+                }
+            }
+        };
+
+        ProjectTemplates.AddRange(templates);
+        await SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Configures the ProjectTemplate entity.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    private static void ConfigureProjectTemplate(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProjectTemplate>(entity =>
+        {
+            entity.HasKey(pt => pt.Id);
+            entity.Property(pt => pt.Id).ValueGeneratedOnAdd();
+            
+            // Required properties
+            entity.Property(pt => pt.Name).IsRequired().HasMaxLength(200);
+            entity.Property(pt => pt.Description).HasMaxLength(1000);
+            entity.Property(pt => pt.Category).IsRequired().HasMaxLength(100);
+            entity.Property(pt => pt.Icon).HasMaxLength(50).HasDefaultValue("📋");
+            
+            // Decimal precision
+            entity.Property(pt => pt.EstimatedBudget).HasPrecision(18, 2);
+            
+            // Indexes for performance
+            entity.HasIndex(pt => pt.Name);
+            entity.HasIndex(pt => pt.Category);
+            entity.HasIndex(pt => pt.IsActive);
+            entity.HasIndex(pt => pt.IsBuiltIn);
+            entity.HasIndex(pt => pt.CreatedDate);
+            
+            // Relationships
+            entity.HasMany(pt => pt.TaskTemplates)
+                  .WithOne(tt => tt.ProjectTemplate)
+                  .HasForeignKey(tt => tt.ProjectTemplateId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    /// <summary>
+    /// Configures the TaskTemplate entity.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    private static void ConfigureTaskTemplate(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TaskTemplate>(entity =>
+        {
+            entity.HasKey(tt => tt.Id);
+            entity.Property(tt => tt.Id).ValueGeneratedOnAdd();
+            
+            // Required properties
+            entity.Property(tt => tt.Name).IsRequired().HasMaxLength(200);
+            entity.Property(tt => tt.Description).HasMaxLength(1000);
+            entity.Property(tt => tt.DefaultAssigneeRole).HasMaxLength(100);
+            
+            // Decimal precision
+            entity.Property(tt => tt.EstimatedHours).HasPrecision(8, 2);
+            
+            // Enum conversions
+            entity.Property(tt => tt.Priority).HasConversion<string>();
+            
+            // Indexes for performance
+            entity.HasIndex(tt => tt.ProjectTemplateId);
+            entity.HasIndex(tt => tt.ParentTaskTemplateId);
+            entity.HasIndex(tt => tt.Order);
+            entity.HasIndex(tt => tt.IsMilestone);
+            entity.HasIndex(tt => tt.IsCriticalPath);
+            
+            // Self-referencing relationship for parent-child hierarchy
+            entity.HasOne(tt => tt.ParentTaskTemplate)
+                  .WithMany(tt => tt.ChildTaskTemplates)
+                  .HasForeignKey(tt => tt.ParentTaskTemplateId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    /// <summary>
+    /// Configures the TaskTemplateDependency entity.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder.</param>
+    private static void ConfigureTaskTemplateDependencies(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TaskTemplateDependency>(entity =>
+        {
+            // Composite key
+            entity.HasKey(ttd => new { ttd.DependentTaskTemplateId, ttd.PrerequisiteTaskTemplateId });
+            
+            // Enum conversion
+            entity.Property(ttd => ttd.DependencyType).HasConversion<string>();
+            
+            // Configure relationships
+            entity.HasOne(ttd => ttd.DependentTaskTemplate)
+                  .WithMany(tt => tt.Dependencies)
+                  .HasForeignKey(ttd => ttd.DependentTaskTemplateId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ttd => ttd.PrerequisiteTaskTemplate)
+                  .WithMany(tt => tt.Dependents)
+                  .HasForeignKey(ttd => ttd.PrerequisiteTaskTemplateId)
+                  .OnDelete(DeleteBehavior.Restrict);
+            
+            // Indexes for performance
+            entity.HasIndex(ttd => ttd.DependentTaskTemplateId);
+            entity.HasIndex(ttd => ttd.PrerequisiteTaskTemplateId);
+        });
     }
 }

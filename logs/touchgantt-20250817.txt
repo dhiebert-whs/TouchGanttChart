@@ -1,0 +1,462 @@
+[2025-08-17 07:55:20.114 INF] Starting Touch Gantt Chart application
+[2025-08-17 07:55:20.401 INF] Initializing database
+[2025-08-17 07:55:21.261 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA journal_mode = 'wal';
+[2025-08-17 07:55:21.397 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "Projects" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Projects" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT NOT NULL,
+    "StartDate" TEXT NOT NULL,
+    "EndDate" TEXT NOT NULL,
+    "ProjectManager" TEXT NOT NULL,
+    "Status" INTEGER NOT NULL,
+    "Priority" INTEGER NOT NULL,
+    "Budget" TEXT NOT NULL,
+    "ActualCost" TEXT NOT NULL,
+    "CreatedDate" TEXT NOT NULL,
+    "LastModifiedDate" TEXT NOT NULL,
+    "IsArchived" INTEGER NOT NULL,
+    "Color" TEXT NOT NULL DEFAULT '#3498db'
+);
+[2025-08-17 07:55:21.401 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "ProjectTemplates" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ProjectTemplates" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT NOT NULL,
+    "Category" TEXT NOT NULL,
+    "EstimatedDurationDays" INTEGER NOT NULL,
+    "EstimatedBudget" TEXT NOT NULL,
+    "IsBuiltIn" INTEGER NOT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "Icon" TEXT NOT NULL DEFAULT '📋',
+    "CreatedDate" TEXT NOT NULL,
+    "LastModifiedDate" TEXT NOT NULL,
+    "UsageCount" INTEGER NOT NULL
+);
+[2025-08-17 07:55:21.406 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "Tasks" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Tasks" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT NOT NULL,
+    "StartDate" TEXT NOT NULL,
+    "EndDate" TEXT NOT NULL,
+    "Progress" INTEGER NOT NULL DEFAULT 0,
+    "Status" INTEGER NOT NULL,
+    "Priority" INTEGER NOT NULL,
+    "Assignee" TEXT NOT NULL,
+    "EstimatedHours" REAL NOT NULL,
+    "ActualHours" REAL NOT NULL,
+    "ParentTaskId" INTEGER NULL,
+    "ProjectId" INTEGER NOT NULL,
+    "CreatedDate" TEXT NOT NULL,
+    "LastModifiedDate" TEXT NOT NULL,
+    CONSTRAINT "FK_Tasks_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_Tasks_Tasks_ParentTaskId" FOREIGN KEY ("ParentTaskId") REFERENCES "Tasks" ("Id") ON DELETE RESTRICT
+);
+[2025-08-17 07:55:21.406 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "TaskTemplates" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_TaskTemplates" PRIMARY KEY AUTOINCREMENT,
+    "ProjectTemplateId" INTEGER NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT NOT NULL,
+    "EstimatedDurationDays" INTEGER NOT NULL,
+    "EstimatedHours" TEXT NOT NULL,
+    "Priority" TEXT NOT NULL,
+    "Order" INTEGER NOT NULL,
+    "ParentTaskTemplateId" INTEGER NULL,
+    "DefaultAssigneeRole" TEXT NOT NULL,
+    "StartOffsetDays" INTEGER NOT NULL,
+    "IsMilestone" INTEGER NOT NULL,
+    "IsCriticalPath" INTEGER NOT NULL,
+    "CreatedDate" TEXT NOT NULL,
+    CONSTRAINT "FK_TaskTemplates_ProjectTemplates_ProjectTemplateId" FOREIGN KEY ("ProjectTemplateId") REFERENCES "ProjectTemplates" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_TaskTemplates_TaskTemplates_ParentTaskTemplateId" FOREIGN KEY ("ParentTaskTemplateId") REFERENCES "TaskTemplates" ("Id") ON DELETE RESTRICT
+);
+[2025-08-17 07:55:21.407 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "TaskDependencies" (
+    "DependentTaskId" INTEGER NOT NULL,
+    "PrerequisiteTaskId" INTEGER NOT NULL,
+    CONSTRAINT "PK_TaskDependencies" PRIMARY KEY ("DependentTaskId", "PrerequisiteTaskId"),
+    CONSTRAINT "FK_TaskDependencies_Tasks_DependentTaskId" FOREIGN KEY ("DependentTaskId") REFERENCES "Tasks" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_TaskDependencies_Tasks_PrerequisiteTaskId" FOREIGN KEY ("PrerequisiteTaskId") REFERENCES "Tasks" ("Id") ON DELETE CASCADE
+);
+[2025-08-17 07:55:21.408 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "TaskTemplateDependency" (
+    "DependentTaskTemplateId" INTEGER NOT NULL,
+    "PrerequisiteTaskTemplateId" INTEGER NOT NULL,
+    "DependencyType" TEXT NOT NULL,
+    "LagDays" INTEGER NOT NULL,
+    CONSTRAINT "PK_TaskTemplateDependency" PRIMARY KEY ("DependentTaskTemplateId", "PrerequisiteTaskTemplateId"),
+    CONSTRAINT "FK_TaskTemplateDependency_TaskTemplates_DependentTaskTemplateId" FOREIGN KEY ("DependentTaskTemplateId") REFERENCES "TaskTemplates" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_TaskTemplateDependency_TaskTemplates_PrerequisiteTaskTemplateId" FOREIGN KEY ("PrerequisiteTaskTemplateId") REFERENCES "TaskTemplates" ("Id") ON DELETE RESTRICT
+);
+[2025-08-17 07:55:21.408 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Projects_CreatedDate" ON "Projects" ("CreatedDate");
+[2025-08-17 07:55:21.408 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Projects_EndDate" ON "Projects" ("EndDate");
+[2025-08-17 07:55:21.408 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Projects_IsArchived" ON "Projects" ("IsArchived");
+[2025-08-17 07:55:21.409 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Projects_Name" ON "Projects" ("Name");
+[2025-08-17 07:55:21.409 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Projects_StartDate" ON "Projects" ("StartDate");
+[2025-08-17 07:55:21.409 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Projects_Status" ON "Projects" ("Status");
+[2025-08-17 07:55:21.409 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ProjectTemplates_Category" ON "ProjectTemplates" ("Category");
+[2025-08-17 07:55:21.409 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ProjectTemplates_CreatedDate" ON "ProjectTemplates" ("CreatedDate");
+[2025-08-17 07:55:21.409 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ProjectTemplates_IsActive" ON "ProjectTemplates" ("IsActive");
+[2025-08-17 07:55:21.409 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ProjectTemplates_IsBuiltIn" ON "ProjectTemplates" ("IsBuiltIn");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ProjectTemplates_Name" ON "ProjectTemplates" ("Name");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskDependencies_PrerequisiteTaskId" ON "TaskDependencies" ("PrerequisiteTaskId");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_Assignee" ON "Tasks" ("Assignee");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_CreatedDate" ON "Tasks" ("CreatedDate");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_EndDate" ON "Tasks" ("EndDate");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_Name" ON "Tasks" ("Name");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_ParentTaskId" ON "Tasks" ("ParentTaskId");
+[2025-08-17 07:55:21.410 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_Priority" ON "Tasks" ("Priority");
+[2025-08-17 07:55:21.411 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_Progress" ON "Tasks" ("Progress");
+[2025-08-17 07:55:21.411 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_ProjectId" ON "Tasks" ("ProjectId");
+[2025-08-17 07:55:21.411 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_StartDate" ON "Tasks" ("StartDate");
+[2025-08-17 07:55:21.411 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_Tasks_Status" ON "Tasks" ("Status");
+[2025-08-17 07:55:21.411 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskTemplateDependency_DependentTaskTemplateId" ON "TaskTemplateDependency" ("DependentTaskTemplateId");
+[2025-08-17 07:55:21.411 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskTemplateDependency_PrerequisiteTaskTemplateId" ON "TaskTemplateDependency" ("PrerequisiteTaskTemplateId");
+[2025-08-17 07:55:21.412 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskTemplates_IsCriticalPath" ON "TaskTemplates" ("IsCriticalPath");
+[2025-08-17 07:55:21.412 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskTemplates_IsMilestone" ON "TaskTemplates" ("IsMilestone");
+[2025-08-17 07:55:21.412 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskTemplates_Order" ON "TaskTemplates" ("Order");
+[2025-08-17 07:55:21.412 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskTemplates_ParentTaskTemplateId" ON "TaskTemplates" ("ParentTaskTemplateId");
+[2025-08-17 07:55:21.412 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_TaskTemplates_ProjectTemplateId" ON "TaskTemplates" ("ProjectTemplateId");
+[2025-08-17 07:55:21.428 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA journal_mode = WAL;
+[2025-08-17 07:55:21.430 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA synchronous = NORMAL;
+[2025-08-17 07:55:21.430 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA temp_store = MEMORY;
+[2025-08-17 07:55:21.434 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA mmap_size = 268435456;
+[2025-08-17 07:55:21.435 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA cache_size = 10000;
+[2025-08-17 07:55:21.435 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA foreign_keys = ON;
+[2025-08-17 07:55:21.632 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Projects" AS "p")
+[2025-08-17 07:55:21.862 INF] Executed DbCommand (7ms) [Parameters=[@p0='?' (DbType = Decimal), @p1='?' (DbType = Decimal), @p2='?' (Size = 7), @p3='?' (DbType = DateTime), @p4='?' (Size = 79), @p5='?' (DbType = DateTime), @p6='?' (DbType = Boolean), @p7='?' (DbType = DateTime), @p8='?' (Size = 29), @p9='?' (DbType = Int32), @p10='?' (Size = 16), @p11='?' (DbType = DateTime), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Projects" ("ActualCost", "Budget", "Color", "CreatedDate", "Description", "EndDate", "IsArchived", "LastModifiedDate", "Name", "Priority", "ProjectManager", "StartDate", "Status")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.037 INF] Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Double), @p1='?' (Size = 15), @p2='?' (DbType = DateTime), @p3='?' (Size = 51), @p4='?' (DbType = DateTime), @p5='?' (DbType = Double), @p6='?' (DbType = DateTime), @p7='?' (Size = 16), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (DbType = Int32), @p11='?' (DbType = Int32), @p12='?' (DbType = DateTime), @p13='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Tasks" ("ActualHours", "Assignee", "CreatedDate", "Description", "EndDate", "EstimatedHours", "LastModifiedDate", "Name", "ParentTaskId", "Priority", "Progress", "ProjectId", "StartDate", "Status")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13)
+RETURNING "Id";
+[2025-08-17 07:55:22.040 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Double), @p1='?' (Size = 17), @p2='?' (DbType = DateTime), @p3='?' (Size = 50), @p4='?' (DbType = DateTime), @p5='?' (DbType = Double), @p6='?' (DbType = DateTime), @p7='?' (Size = 15), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (DbType = Int32), @p11='?' (DbType = Int32), @p12='?' (DbType = DateTime), @p13='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Tasks" ("ActualHours", "Assignee", "CreatedDate", "Description", "EndDate", "EstimatedHours", "LastModifiedDate", "Name", "ParentTaskId", "Priority", "Progress", "ProjectId", "StartDate", "Status")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13)
+RETURNING "Id";
+[2025-08-17 07:55:22.042 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Double), @p1='?' (Size = 18), @p2='?' (DbType = DateTime), @p3='?' (Size = 58), @p4='?' (DbType = DateTime), @p5='?' (DbType = Double), @p6='?' (DbType = DateTime), @p7='?' (Size = 18), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (DbType = Int32), @p11='?' (DbType = Int32), @p12='?' (DbType = DateTime), @p13='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Tasks" ("ActualHours", "Assignee", "CreatedDate", "Description", "EndDate", "EstimatedHours", "LastModifiedDate", "Name", "ParentTaskId", "Priority", "Progress", "ProjectId", "StartDate", "Status")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13)
+RETURNING "Id";
+[2025-08-17 07:55:22.043 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Double), @p1='?' (Size = 18), @p2='?' (DbType = DateTime), @p3='?' (Size = 59), @p4='?' (DbType = DateTime), @p5='?' (DbType = Double), @p6='?' (DbType = DateTime), @p7='?' (Size = 25), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (DbType = Int32), @p11='?' (DbType = DateTime), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Tasks" ("ActualHours", "Assignee", "CreatedDate", "Description", "EndDate", "EstimatedHours", "LastModifiedDate", "Name", "ParentTaskId", "Priority", "ProjectId", "StartDate", "Status")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id", "Progress";
+[2025-08-17 07:55:22.044 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Double), @p1='?' (Size = 18), @p2='?' (DbType = DateTime), @p3='?' (Size = 60), @p4='?' (DbType = DateTime), @p5='?' (DbType = Double), @p6='?' (DbType = DateTime), @p7='?' (Size = 28), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (DbType = Int32), @p11='?' (DbType = DateTime), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Tasks" ("ActualHours", "Assignee", "CreatedDate", "Description", "EndDate", "EstimatedHours", "LastModifiedDate", "Name", "ParentTaskId", "Priority", "ProjectId", "StartDate", "Status")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id", "Progress";
+[2025-08-17 07:55:22.045 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Double), @p1='?' (Size = 7), @p2='?' (DbType = DateTime), @p3='?' (Size = 50), @p4='?' (DbType = DateTime), @p5='?' (DbType = Double), @p6='?' (DbType = DateTime), @p7='?' (Size = 22), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (DbType = Int32), @p11='?' (DbType = DateTime), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Tasks" ("ActualHours", "Assignee", "CreatedDate", "Description", "EndDate", "EstimatedHours", "LastModifiedDate", "Name", "ParentTaskId", "Priority", "ProjectId", "StartDate", "Status")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id", "Progress";
+[2025-08-17 07:55:22.052 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "ProjectTemplates" AS "p")
+[2025-08-17 07:55:22.115 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (Size = 20), @p1='?' (DbType = DateTime), @p2='?' (Size = 96), @p3='?' (DbType = Decimal), @p4='?' (DbType = Int32), @p5='?' (Size = 2), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = DateTime), @p9='?' (Size = 28), @p10='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "ProjectTemplates" ("Category", "CreatedDate", "Description", "EstimatedBudget", "EstimatedDurationDays", "Icon", "IsActive", "IsBuiltIn", "LastModifiedDate", "Name", "UsageCount")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10)
+RETURNING "Id";
+[2025-08-17 07:55:22.120 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (Size = 9), @p1='?' (DbType = DateTime), @p2='?' (Size = 67), @p3='?' (DbType = Decimal), @p4='?' (DbType = Int32), @p5='?' (Size = 2), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = DateTime), @p9='?' (Size = 18), @p10='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "ProjectTemplates" ("Category", "CreatedDate", "Description", "EstimatedBudget", "EstimatedDurationDays", "Icon", "IsActive", "IsBuiltIn", "LastModifiedDate", "Name", "UsageCount")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10)
+RETURNING "Id";
+[2025-08-17 07:55:22.121 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (Size = 16), @p1='?' (DbType = DateTime), @p2='?' (Size = 85), @p3='?' (DbType = Decimal), @p4='?' (DbType = Int32), @p5='?' (Size = 2), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = DateTime), @p9='?' (Size = 14), @p10='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "ProjectTemplates" ("Category", "CreatedDate", "Description", "EstimatedBudget", "EstimatedDurationDays", "Icon", "IsActive", "IsBuiltIn", "LastModifiedDate", "Name", "UsageCount")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10)
+RETURNING "Id";
+[2025-08-17 07:55:22.124 INF] Executed DbCommand (0ms) [Parameters=[@p11='?' (DbType = DateTime), @p12='?' (Size = 15), @p13='?' (Size = 51), @p14='?' (DbType = Int32), @p15='?' (DbType = Decimal), @p16='?' (DbType = Boolean), @p17='?' (DbType = Boolean), @p18='?' (Size = 16), @p19='?' (DbType = Int32), @p20='?' (DbType = Int32), @p21='?' (Size = 4), @p22='?' (DbType = Int32), @p23='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23)
+RETURNING "Id";
+[2025-08-17 07:55:22.125 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 9), @p2='?' (Size = 55), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 13), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.125 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 9), @p2='?' (Size = 30), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 19), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.126 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 11), @p2='?' (Size = 28), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 15), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.126 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 9), @p2='?' (Size = 35), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 19), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.126 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 11), @p2='?' (Size = 42), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 13), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.127 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 15), @p2='?' (Size = 33), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 10), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 8), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.127 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 47), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 15), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.127 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 39), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 20), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.127 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 36), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 20), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.128 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 16), @p2='?' (Size = 41), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 13), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.128 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 45), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 15), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 8), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.128 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 16), @p2='?' (Size = 45), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 19), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.128 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 45), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 20), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.129 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 13), @p2='?' (Size = 45), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 13), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.129 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 35), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 15), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.129 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 55), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 17), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.129 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 20), @p2='?' (Size = 51), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 21), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.130 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 17), @p2='?' (Size = 50), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 18), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.130 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 13), @p2='?' (Size = 51), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 18), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 4), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.130 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 13), @p2='?' (Size = 47), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 15), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 8), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.130 INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (Size = 13), @p2='?' (Size = 55), @p3='?' (DbType = Int32), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Boolean), @p7='?' (Size = 20), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?' (Size = 6), @p11='?' (DbType = Int32), @p12='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "TaskTemplates" ("CreatedDate", "DefaultAssigneeRole", "Description", "EstimatedDurationDays", "EstimatedHours", "IsCriticalPath", "IsMilestone", "Name", "Order", "ParentTaskTemplateId", "Priority", "ProjectTemplateId", "StartOffsetDays")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING "Id";
+[2025-08-17 07:55:22.132 INF] Database initialization completed
+[2025-08-17 07:55:22.147 INF] Application started. Press Ctrl+C to shut down.
+[2025-08-17 07:55:22.147 INF] Hosting environment: Production
+[2025-08-17 07:55:22.148 INF] Content root path: C:\Users\dhiebert\Local Repositories\TouchGanttChart
+[2025-08-17 07:55:22.896 INF] MainWindow initialized
+[2025-08-17 07:55:23.282 INF] MainWindow loading - initializing view model
+[2025-08-17 07:55:23.317 INF] Initializing MainWindowViewModel
+[2025-08-17 07:55:23.323 INF] Retrieving all projects
+[2025-08-17 07:55:23.507 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status"
+FROM "Projects" AS "p"
+LEFT JOIN "Tasks" AS "t" ON "p"."Id" = "t"."ProjectId"
+ORDER BY "p"."Name", "p"."Id"
+[2025-08-17 07:55:23.522 INF] Retrieved 1 projects
+[2025-08-17 07:55:23.523 INF] Status set in MainWindowViewModel: Loaded 1 projects
+[2025-08-17 07:55:23.525 INF] Retrieving tasks for project ID 1
+[2025-08-17 07:55:23.569 WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+[2025-08-17 07:55:23.616 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-17 07:55:23.624 INF] Retrieved 6 tasks for project ID 1
+[2025-08-17 07:55:23.652 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-17 07:55:23.664 INF] Successfully initialized MainWindowViewModel
+[2025-08-17 07:55:23.665 INF] MainWindow loaded successfully
+[2025-08-17 07:55:23.763 INF] Application started successfully
+[2025-08-17 07:55:43.489 INF] Status set in MainWindowViewModel: Open project functionality will be implemented
+[2025-08-17 07:55:55.533 INF] Status set in MainWindowViewModel: Create new project functionality will be implemented
+[2025-08-17 07:55:57.343 INF] Status set in MainWindowViewModel: Open project functionality will be implemented
+[2025-08-17 07:55:58.731 INF] Status set in MainWindowViewModel: Saving project...
+[2025-08-17 07:55:58.735 INF] Updating project 'Touch Gantt Chart Development' (ID: 1)
+[2025-08-17 07:55:58.750 INF] Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Projects" SET "LastModifiedDate" = @p0
+WHERE "Id" = @p1
+RETURNING 1;
+[2025-08-17 07:55:58.754 INF] Updated project 'Touch Gantt Chart Development'
+[2025-08-17 07:55:58.754 INF] Status set in MainWindowViewModel: Project saved successfully
+[2025-08-17 07:56:01.818 INF] Task edit dialog configured for new task in project: 1
+[2025-08-17 07:56:06.003 INF] Task editing cancelled
+[2025-08-17 07:56:12.330 INF] Task edit dialog configured for task: 1 - Project Planning
+[2025-08-17 07:56:18.842 INF] Task editing cancelled
+[2025-08-17 07:56:32.105 INF] MainWindow closing - cleaning up view model
+[2025-08-17 07:56:32.107 INF] Cleaning up MainWindowViewModel
+[2025-08-17 07:56:32.107 INF] Successfully cleaned up MainWindowViewModel
+[2025-08-17 07:56:32.108 INF] MainWindow cleanup completed
+[2025-08-17 07:56:32.204 INF] Shutting down application
+[2025-08-17 07:56:32.218 INF] Application is shutting down...
+[2025-08-17 07:56:32.269 INF] Application shutdown complete
+[2025-08-17 08:00:16.238 INF] Starting Touch Gantt Chart application
+[2025-08-17 08:00:16.525 INF] Initializing database
+[2025-08-17 08:00:17.177 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+[2025-08-17 08:00:17.186 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA journal_mode = WAL;
+[2025-08-17 08:00:17.189 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA synchronous = NORMAL;
+[2025-08-17 08:00:17.189 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA temp_store = MEMORY;
+[2025-08-17 08:00:17.190 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA mmap_size = 268435456;
+[2025-08-17 08:00:17.190 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA cache_size = 10000;
+[2025-08-17 08:00:17.190 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA foreign_keys = ON;
+[2025-08-17 08:00:17.334 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Projects" AS "p")
+[2025-08-17 08:00:17.339 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "ProjectTemplates" AS "p")
+[2025-08-17 08:00:17.339 INF] Database initialization completed
+[2025-08-17 08:00:17.350 INF] Application started. Press Ctrl+C to shut down.
+[2025-08-17 08:00:17.350 INF] Hosting environment: Production
+[2025-08-17 08:00:17.351 INF] Content root path: C:\Users\dhiebert\Local Repositories\TouchGanttChart
+[2025-08-17 08:00:17.864 INF] MainWindow initialized
+[2025-08-17 08:00:18.128 INF] MainWindow loading - initializing view model
+[2025-08-17 08:00:18.161 INF] Initializing MainWindowViewModel
+[2025-08-17 08:00:18.164 INF] Retrieving all projects
+[2025-08-17 08:00:18.425 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status"
+FROM "Projects" AS "p"
+LEFT JOIN "Tasks" AS "t" ON "p"."Id" = "t"."ProjectId"
+ORDER BY "p"."Name", "p"."Id"
+[2025-08-17 08:00:18.492 INF] Retrieved 1 projects
+[2025-08-17 08:00:18.492 INF] Status set in MainWindowViewModel: Loaded 1 projects
+[2025-08-17 08:00:18.494 INF] Retrieving tasks for project ID 1
+[2025-08-17 08:00:18.521 WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+[2025-08-17 08:00:18.551 INF] Executed DbCommand (2ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-17 08:00:18.557 INF] Retrieved 6 tasks for project ID 1
+[2025-08-17 08:00:18.579 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-17 08:00:18.585 INF] Successfully initialized MainWindowViewModel
+[2025-08-17 08:00:18.586 INF] MainWindow loaded successfully
+[2025-08-17 08:00:18.638 INF] Application started successfully
+[2025-08-17 08:09:36.365 INF] Task edit dialog configured for task: 4 - Gantt Chart Visualization
+[2025-08-17 08:09:47.429 INF] Updating task 'Gantt Chart Visualization' (ID: 4)
+[2025-08-17 08:09:47.497 INF] Executed DbCommand (3ms) [Parameters=[@p2='?' (DbType = Int32), @p0='?' (DbType = DateTime), @p1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+UPDATE "Tasks" SET "LastModifiedDate" = @p0, "Progress" = @p1
+WHERE "Id" = @p2
+RETURNING 1;
+[2025-08-17 08:09:47.529 INF] Updated task 'Gantt Chart Visualization'
+[2025-08-17 08:09:47.530 INF] Updated task: 4 - Gantt Chart Visualization
+[2025-08-17 08:09:47.552 INF] Retrieving tasks for project ID 1
+[2025-08-17 08:09:47.558 INF] Executed DbCommand (1ms) [Parameters=[@__projectId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."ActualHours", "t"."Assignee", "t"."CreatedDate", "t"."Description", "t"."EndDate", "t"."EstimatedHours", "t"."LastModifiedDate", "t"."Name", "t"."ParentTaskId", "t"."Priority", "t"."Progress", "t"."ProjectId", "t"."StartDate", "t"."Status", "p"."Id", "p"."ActualCost", "p"."Budget", "p"."Color", "p"."CreatedDate", "p"."Description", "p"."EndDate", "p"."IsArchived", "p"."LastModifiedDate", "p"."Name", "p"."Priority", "p"."ProjectManager", "p"."StartDate", "p"."Status", "t0"."Id", "t0"."ActualHours", "t0"."Assignee", "t0"."CreatedDate", "t0"."Description", "t0"."EndDate", "t0"."EstimatedHours", "t0"."LastModifiedDate", "t0"."Name", "t0"."ParentTaskId", "t0"."Priority", "t0"."Progress", "t0"."ProjectId", "t0"."StartDate", "t0"."Status", "t1"."Id", "t1"."ActualHours", "t1"."Assignee", "t1"."CreatedDate", "t1"."Description", "t1"."EndDate", "t1"."EstimatedHours", "t1"."LastModifiedDate", "t1"."Name", "t1"."ParentTaskId", "t1"."Priority", "t1"."Progress", "t1"."ProjectId", "t1"."StartDate", "t1"."Status", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s"."ActualHours", "s"."Assignee", "s"."CreatedDate", "s"."Description", "s"."EndDate", "s"."EstimatedHours", "s"."LastModifiedDate", "s"."Name", "s"."ParentTaskId", "s"."Priority", "s"."Progress", "s"."ProjectId", "s"."StartDate", "s"."Status", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId", "s0"."Id", "s0"."ActualHours", "s0"."Assignee", "s0"."CreatedDate", "s0"."Description", "s0"."EndDate", "s0"."EstimatedHours", "s0"."LastModifiedDate", "s0"."Name", "s0"."ParentTaskId", "s0"."Priority", "s0"."Progress", "s0"."ProjectId", "s0"."StartDate", "s0"."Status"
+FROM "Tasks" AS "t"
+INNER JOIN "Projects" AS "p" ON "t"."ProjectId" = "p"."Id"
+LEFT JOIN "Tasks" AS "t0" ON "t"."ParentTaskId" = "t0"."Id"
+LEFT JOIN "Tasks" AS "t1" ON "t"."Id" = "t1"."ParentTaskId"
+LEFT JOIN (
+    SELECT "t2"."DependentTaskId", "t2"."PrerequisiteTaskId", "t3"."Id", "t3"."ActualHours", "t3"."Assignee", "t3"."CreatedDate", "t3"."Description", "t3"."EndDate", "t3"."EstimatedHours", "t3"."LastModifiedDate", "t3"."Name", "t3"."ParentTaskId", "t3"."Priority", "t3"."Progress", "t3"."ProjectId", "t3"."StartDate", "t3"."Status"
+    FROM "TaskDependencies" AS "t2"
+    INNER JOIN "Tasks" AS "t3" ON "t2"."PrerequisiteTaskId" = "t3"."Id"
+) AS "s" ON "t"."Id" = "s"."DependentTaskId"
+LEFT JOIN (
+    SELECT "t4"."DependentTaskId", "t4"."PrerequisiteTaskId", "t5"."Id", "t5"."ActualHours", "t5"."Assignee", "t5"."CreatedDate", "t5"."Description", "t5"."EndDate", "t5"."EstimatedHours", "t5"."LastModifiedDate", "t5"."Name", "t5"."ParentTaskId", "t5"."Priority", "t5"."Progress", "t5"."ProjectId", "t5"."StartDate", "t5"."Status"
+    FROM "TaskDependencies" AS "t4"
+    INNER JOIN "Tasks" AS "t5" ON "t4"."DependentTaskId" = "t5"."Id"
+) AS "s0" ON "t"."Id" = "s0"."PrerequisiteTaskId"
+WHERE "t"."ProjectId" = @__projectId_0
+ORDER BY "t"."StartDate", "t"."Name", "t"."Id", "p"."Id", "t0"."Id", "t1"."Id", "s"."DependentTaskId", "s"."PrerequisiteTaskId", "s"."Id", "s0"."DependentTaskId", "s0"."PrerequisiteTaskId"
+[2025-08-17 08:09:47.559 INF] Retrieved 6 tasks for project ID 1
+[2025-08-17 08:09:47.584 INF] Status set in MainWindowViewModel: Loaded 6 tasks
+[2025-08-17 08:09:47.584 INF] Status set in MainWindowViewModel: Task updated successfully
+[2025-08-17 08:46:31.067 INF] MainWindow closing - cleaning up view model
+[2025-08-17 08:46:31.070 INF] Cleaning up MainWindowViewModel
+[2025-08-17 08:46:31.070 INF] Successfully cleaned up MainWindowViewModel
+[2025-08-17 08:46:31.070 INF] MainWindow cleanup completed
+[2025-08-17 08:46:31.205 INF] Shutting down application
+[2025-08-17 08:46:31.217 INF] Application is shutting down...
+[2025-08-17 08:46:31.256 INF] Application shutdown complete

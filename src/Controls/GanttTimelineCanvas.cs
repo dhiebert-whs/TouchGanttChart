@@ -17,12 +17,15 @@ public class GanttTimelineCanvas : Canvas
     private const double TASK_BAR_HEIGHT = 32;
     private const double TASK_ROW_HEIGHT = 44; // Touch-optimized row height
     private const double TIMELINE_HEADER_HEIGHT = 60;
+    private const double CATEGORY_HEADER_HEIGHT = 36;
+    private const double CATEGORY_SPACING = 8;
     private const double GRID_LINE_THICKNESS = 1;
     private const double MAJOR_GRID_LINE_THICKNESS = 2;
 
     private readonly List<TaskBarElement> _taskBars = new();
     private readonly List<Line> _gridLines = new();
     private readonly List<TextBlock> _timelineLabels = new();
+    private readonly List<UIElement> _dependencyLines = new();
     private Point _lastPanPoint;
     private bool _isPanning;
 
@@ -82,6 +85,11 @@ public class GanttTimelineCanvas : Canvas
             typeof(GanttTimelineCanvas),
             new PropertyMetadata(null, OnSelectedTaskChanged));
 
+    public static readonly DependencyProperty ViewModeProperty =
+        DependencyProperty.Register(nameof(ViewMode), typeof(TimelineViewMode), 
+            typeof(GanttTimelineCanvas),
+            new PropertyMetadata(TimelineViewMode.Weekly, OnViewModeChanged));
+
     public ObservableCollection<GanttTask>? Tasks
     {
         get => (ObservableCollection<GanttTask>?)GetValue(TasksProperty);
@@ -110,6 +118,12 @@ public class GanttTimelineCanvas : Canvas
     {
         get => (GanttTask?)GetValue(SelectedTaskProperty);
         set => SetValue(SelectedTaskProperty, value);
+    }
+
+    public TimelineViewMode ViewMode
+    {
+        get => (TimelineViewMode)GetValue(ViewModeProperty);
+        set => SetValue(ViewModeProperty, value);
     }
 
     #endregion
@@ -158,6 +172,15 @@ public class GanttTimelineCanvas : Canvas
         }
     }
 
+    private static void OnViewModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GanttTimelineCanvas canvas)
+        {
+            canvas.ApplyViewModeSettings();
+            canvas.RedrawTimeline();
+        }
+    }
+
     private void OnTasksCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         RedrawTimeline();
@@ -181,6 +204,7 @@ public class GanttTimelineCanvas : Canvas
         DrawTimelineGrid();
         DrawTimelineHeader();
         DrawTaskBars();
+        DrawDependencyLines();
         UpdateCanvasSize();
     }
 
@@ -190,6 +214,7 @@ public class GanttTimelineCanvas : Canvas
         _taskBars.Clear();
         _gridLines.Clear();
         _timelineLabels.Clear();
+        _dependencyLines.Clear();
     }
 
     private void DrawTimelineGrid()
@@ -198,21 +223,21 @@ public class GanttTimelineCanvas : Canvas
         if (totalDays <= 0) return;
 
         var pixelsPerDay = (ActualWidth * ZoomLevel) / totalDays;
+        var unitDays = TimelineViewConfig.GetTimeUnitDays(ViewMode);
         var currentDate = TimelineStart;
 
-        // Draw vertical grid lines
+        // Draw vertical grid lines based on view mode
         while (currentDate <= TimelineEnd)
         {
             var x = (currentDate - TimelineStart).TotalDays * pixelsPerDay;
             
-            var isWeekStart = currentDate.DayOfWeek == DayOfWeek.Monday;
-            var isMonthStart = currentDate.Day == 1;
+            var (isMajor, isMinor) = GetGridLineType(currentDate);
             
-            var thickness = isMonthStart ? MAJOR_GRID_LINE_THICKNESS : 
-                           isWeekStart ? GRID_LINE_THICKNESS * 1.5 : GRID_LINE_THICKNESS;
+            var thickness = isMajor ? MAJOR_GRID_LINE_THICKNESS : 
+                           isMinor ? GRID_LINE_THICKNESS * 1.5 : GRID_LINE_THICKNESS;
             
-            var brush = isMonthStart ? Brushes.DarkGray :
-                       isWeekStart ? Brushes.Gray : Brushes.LightGray;
+            var brush = isMajor ? Brushes.DarkGray :
+                       isMinor ? Brushes.Gray : Brushes.LightGray;
 
             var line = new Line
             {
@@ -227,27 +252,52 @@ public class GanttTimelineCanvas : Canvas
             Children.Add(line);
             _gridLines.Add(line);
 
-            currentDate = currentDate.AddDays(1);
+            currentDate = GetNextGridDate(currentDate);
         }
 
-        // Draw horizontal grid lines for task rows
-        var taskCount = Tasks?.Count ?? 0;
-        for (int i = 0; i <= taskCount; i++)
+        // Draw horizontal grid lines aligned with category structure
+        if (Tasks != null && Tasks.Count > 0)
         {
-            var y = TIMELINE_HEADER_HEIGHT + (i * TASK_ROW_HEIGHT);
+            var tasksByCategory = Tasks.GroupBy(t => t.Category).ToList();
+            double currentY = TIMELINE_HEADER_HEIGHT;
             
-            var line = new Line
+            foreach (var categoryGroup in tasksByCategory.OrderBy(g => g.Key))
             {
-                X1 = 0,
-                Y1 = y,
-                X2 = ActualWidth * ZoomLevel,
-                Y2 = y,
-                Stroke = Brushes.LightGray,
-                StrokeThickness = GRID_LINE_THICKNESS
-            };
-
-            Children.Add(line);
-            _gridLines.Add(line);
+                // Category header line
+                var categoryLine = new Line
+                {
+                    X1 = 0,
+                    Y1 = currentY,
+                    X2 = ActualWidth * ZoomLevel,
+                    Y2 = currentY,
+                    Stroke = Brushes.Gray,
+                    StrokeThickness = MAJOR_GRID_LINE_THICKNESS
+                };
+                Children.Add(categoryLine);
+                _gridLines.Add(categoryLine);
+                
+                currentY += CATEGORY_HEADER_HEIGHT + CATEGORY_SPACING;
+                
+                // Task rows within category
+                foreach (var task in categoryGroup.OrderBy(t => t.StartDate))
+                {
+                    var taskLine = new Line
+                    {
+                        X1 = 0,
+                        Y1 = currentY,
+                        X2 = ActualWidth * ZoomLevel,
+                        Y2 = currentY,
+                        Stroke = Brushes.LightGray,
+                        StrokeThickness = GRID_LINE_THICKNESS
+                    };
+                    Children.Add(taskLine);
+                    _gridLines.Add(taskLine);
+                    
+                    currentY += TASK_ROW_HEIGHT;
+                }
+                
+                currentY += CATEGORY_SPACING;
+            }
         }
     }
 
@@ -270,69 +320,24 @@ public class GanttTimelineCanvas : Canvas
         Canvas.SetTop(headerBackground, 0);
         Children.Add(headerBackground);
 
-        // Month labels
-        var currentMonth = new DateTime(TimelineStart.Year, TimelineStart.Month, 1);
-        while (currentMonth <= TimelineEnd)
+        // Draw view-mode specific headers
+        switch (ViewMode)
         {
-            var nextMonth = currentMonth.AddMonths(1);
-            var monthEnd = nextMonth > TimelineEnd ? TimelineEnd : nextMonth;
-            
-            var startX = Math.Max(0, (currentMonth - TimelineStart).TotalDays * pixelsPerDay);
-            var endX = (monthEnd - TimelineStart).TotalDays * pixelsPerDay;
-            var width = endX - startX;
-
-            if (width > 60) // Only show if there's enough space
-            {
-                var monthLabel = new TextBlock
-                {
-                    Text = currentMonth.ToString("MMM yyyy"),
-                    FontSize = 14,
-                    FontWeight = FontWeights.SemiBold,
-                    Foreground = Brushes.DarkBlue,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-
-                Canvas.SetLeft(monthLabel, startX + (width - 80) / 2);
-                Canvas.SetTop(monthLabel, 8);
-                Children.Add(monthLabel);
-                _timelineLabels.Add(monthLabel);
-            }
-
-            currentMonth = nextMonth;
-        }
-
-        // Week labels
-        var currentWeek = TimelineStart.Date;
-        while (currentWeek.DayOfWeek != DayOfWeek.Monday && currentWeek > TimelineStart.AddDays(-7))
-            currentWeek = currentWeek.AddDays(-1);
-
-        while (currentWeek <= TimelineEnd)
-        {
-            var weekEnd = currentWeek.AddDays(7);
-            var actualWeekEnd = weekEnd > TimelineEnd ? TimelineEnd : weekEnd;
-            
-            var startX = Math.Max(0, (currentWeek - TimelineStart).TotalDays * pixelsPerDay);
-            var endX = (actualWeekEnd - TimelineStart).TotalDays * pixelsPerDay;
-            var width = endX - startX;
-
-            if (width > 40) // Only show if there's enough space
-            {
-                var weekLabel = new TextBlock
-                {
-                    Text = $"Week {GetWeekOfYear(currentWeek)}",
-                    FontSize = 10,
-                    Foreground = Brushes.Gray,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                };
-
-                Canvas.SetLeft(weekLabel, startX + (width - 50) / 2);
-                Canvas.SetTop(weekLabel, 32);
-                Children.Add(weekLabel);
-                _timelineLabels.Add(weekLabel);
-            }
-
-            currentWeek = currentWeek.AddDays(7);
+            case TimelineViewMode.Daily:
+                DrawDailyHeader(pixelsPerDay);
+                break;
+            case TimelineViewMode.Weekly:
+                DrawWeeklyHeader(pixelsPerDay);
+                break;
+            case TimelineViewMode.Monthly:
+                DrawMonthlyHeader(pixelsPerDay);
+                break;
+            case TimelineViewMode.Quarterly:
+                DrawQuarterlyHeader(pixelsPerDay);
+                break;
+            case TimelineViewMode.Yearly:
+                DrawYearlyHeader(pixelsPerDay);
+                break;
         }
     }
 
@@ -345,15 +350,60 @@ public class GanttTimelineCanvas : Canvas
 
         var pixelsPerDay = (ActualWidth * ZoomLevel) / totalDays;
 
-        for (int i = 0; i < Tasks.Count; i++)
+        // Group tasks by category
+        var tasksByCategory = Tasks.GroupBy(t => t.Category).ToList();
+        
+        double currentY = TIMELINE_HEADER_HEIGHT;
+        
+        foreach (var categoryGroup in tasksByCategory.OrderBy(g => g.Key))
         {
-            var task = Tasks[i];
-            var y = TIMELINE_HEADER_HEIGHT + (i * TASK_ROW_HEIGHT) + (TASK_ROW_HEIGHT - TASK_BAR_HEIGHT) / 2;
-
-            var taskElement = CreateTaskBarElement(task, pixelsPerDay, y);
-            _taskBars.Add(taskElement);
-            Children.Add(taskElement.Container);
+            // Draw category header
+            DrawCategoryHeader(categoryGroup.Key, currentY, pixelsPerDay);
+            currentY += CATEGORY_HEADER_HEIGHT + CATEGORY_SPACING;
+            
+            // Draw tasks in this category
+            foreach (var task in categoryGroup.OrderBy(t => t.StartDate))
+            {
+                var taskY = currentY + (TASK_ROW_HEIGHT - TASK_BAR_HEIGHT) / 2;
+                var taskElement = CreateTaskBarElement(task, pixelsPerDay, taskY);
+                _taskBars.Add(taskElement);
+                Children.Add(taskElement.Container);
+                
+                currentY += TASK_ROW_HEIGHT;
+            }
+            
+            // Add spacing between categories
+            currentY += CATEGORY_SPACING;
         }
+    }
+
+    private void DrawCategoryHeader(string categoryName, double y, double pixelsPerDay)
+    {
+        // Category background
+        var categoryBackground = new Rectangle
+        {
+            Width = ActualWidth * ZoomLevel,
+            Height = CATEGORY_HEADER_HEIGHT,
+            Fill = new SolidColorBrush(Color.FromRgb(240, 244, 248)),
+            Stroke = new SolidColorBrush(Color.FromRgb(206, 212, 218)),
+            StrokeThickness = 1
+        };
+        Canvas.SetTop(categoryBackground, y);
+        Children.Add(categoryBackground);
+
+        // Category label
+        var categoryLabel = new TextBlock
+        {
+            Text = categoryName,
+            FontSize = 14,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(Color.FromRgb(33, 37, 41)),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(16, 0, 0, 0)
+        };
+        Canvas.SetLeft(categoryLabel, 16);
+        Canvas.SetTop(categoryLabel, y + (CATEGORY_HEADER_HEIGHT - 20) / 2);
+        Children.Add(categoryLabel);
     }
 
     private TaskBarElement CreateTaskBarElement(GanttTask task, double pixelsPerDay, double y)
@@ -377,6 +427,9 @@ public class GanttTimelineCanvas : Canvas
         container.Background = fillBrush;
         container.BorderBrush = borderBrush;
 
+        // Create the main content grid
+        var contentGrid = new Grid();
+
         // Progress indicator
         if (task.Progress > 0)
         {
@@ -389,7 +442,7 @@ public class GanttTimelineCanvas : Canvas
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            container.Child = progressBar;
+            contentGrid.Children.Add(progressBar);
         }
 
         // Task label
@@ -424,17 +477,8 @@ public class GanttTimelineCanvas : Canvas
             labelContainer.Children.Add(progressLabel);
         }
 
-        if (container.Child == null)
-        {
-            container.Child = labelContainer;
-        }
-        else
-        {
-            var grid = new Grid();
-            grid.Children.Add((UIElement)container.Child);
-            grid.Children.Add(labelContainer);
-            container.Child = grid;
-        }
+        contentGrid.Children.Add(labelContainer);
+        container.Child = contentGrid;
 
         Canvas.SetLeft(container, startX);
         Canvas.SetTop(container, y);
@@ -446,18 +490,103 @@ public class GanttTimelineCanvas : Canvas
         return new TaskBarElement(task, container);
     }
 
+    private void DrawDependencyLines()
+    {
+        if (Tasks == null) return;
+
+        var totalDays = (TimelineEnd - TimelineStart).TotalDays;
+        if (totalDays <= 0) return;
+
+        var pixelsPerDay = (ActualWidth * ZoomLevel) / totalDays;
+
+        // Draw dependency lines for each task
+        for (int i = 0; i < Tasks.Count; i++)
+        {
+            var task = Tasks[i];
+            if (task.Dependencies == null || task.Dependencies.Count == 0) continue;
+
+            foreach (var dependency in task.Dependencies)
+            {
+                var dependencyIndex = Tasks.IndexOf(dependency);
+                if (dependencyIndex == -1) continue;
+
+                DrawDependencyLine(task, dependency, i, dependencyIndex, pixelsPerDay);
+            }
+        }
+    }
+
+    private void DrawDependencyLine(GanttTask task, GanttTask dependency, int taskIndex, int dependencyIndex, double pixelsPerDay)
+    {
+        // Calculate positions
+        var taskY = TIMELINE_HEADER_HEIGHT + (taskIndex * TASK_ROW_HEIGHT) + (TASK_ROW_HEIGHT / 2);
+        var dependencyY = TIMELINE_HEADER_HEIGHT + (dependencyIndex * TASK_ROW_HEIGHT) + (TASK_ROW_HEIGHT / 2);
+
+        var dependencyEndX = (dependency.EndDate - TimelineStart).TotalDays * pixelsPerDay;
+        var taskStartX = (task.StartDate - TimelineStart).TotalDays * pixelsPerDay;
+
+        // Create dependency line path (L-shaped arrow)
+        var pathGeometry = new PathGeometry();
+        var pathFigure = new PathFigure { StartPoint = new Point(dependencyEndX, dependencyY) };
+
+        // Horizontal line from dependency end
+        var horizontalLength = Math.Max(20, (taskStartX - dependencyEndX) / 2);
+        pathFigure.Segments.Add(new LineSegment(new Point(dependencyEndX + horizontalLength, dependencyY), true));
+
+        // Vertical line toward task
+        pathFigure.Segments.Add(new LineSegment(new Point(dependencyEndX + horizontalLength, taskY), true));
+
+        // Final horizontal line to task start
+        pathFigure.Segments.Add(new LineSegment(new Point(taskStartX, taskY), true));
+
+        pathGeometry.Figures.Add(pathFigure);
+
+        var dependencyPath = new Path
+        {
+            Data = pathGeometry,
+            Stroke = new SolidColorBrush(Color.FromRgb(52, 144, 220)),
+            StrokeThickness = 2,
+            StrokeDashArray = new DoubleCollection { 5, 3 }
+        };
+
+        Children.Add(dependencyPath);
+        _dependencyLines.Add(dependencyPath);
+
+        // Add arrowhead at the end
+        DrawArrowHead(taskStartX, taskY);
+    }
+
+    private void DrawArrowHead(double x, double y)
+    {
+        var arrowGeometry = new PathGeometry();
+        var arrowFigure = new PathFigure { StartPoint = new Point(x - 8, y - 4) };
+        arrowFigure.Segments.Add(new LineSegment(new Point(x, y), true));
+        arrowFigure.Segments.Add(new LineSegment(new Point(x - 8, y + 4), true));
+        arrowGeometry.Figures.Add(arrowFigure);
+
+        var arrowPath = new Path
+        {
+            Data = arrowGeometry,
+            Stroke = new SolidColorBrush(Color.FromRgb(52, 144, 220)),
+            StrokeThickness = 2,
+            Fill = new SolidColorBrush(Color.FromRgb(52, 144, 220))
+        };
+
+        Children.Add(arrowPath);
+        _dependencyLines.Add(arrowPath);
+    }
+
     #endregion
 
     #region Touch and Mouse Interaction
 
-    private void OnManipulationStarted(object sender, ManipulationStartedEventArgs e)
+    private void OnManipulationStarted(object? sender, ManipulationStartedEventArgs e)
     {
         _isPanning = true;
         _lastPanPoint = e.ManipulationOrigin;
         CaptureMouse();
     }
 
-    private void OnManipulationDelta(object sender, ManipulationDeltaEventArgs e)
+    private void OnManipulationDelta(object? sender, ManipulationDeltaEventArgs e)
     {
         if (!_isPanning) return;
 
@@ -480,7 +609,7 @@ public class GanttTimelineCanvas : Canvas
         }
     }
 
-    private void OnManipulationCompleted(object sender, ManipulationCompletedEventArgs e)
+    private void OnManipulationCompleted(object? sender, ManipulationCompletedEventArgs e)
     {
         _isPanning = false;
         ReleaseMouseCapture();
@@ -603,7 +732,20 @@ public class GanttTimelineCanvas : Canvas
         var taskCount = Tasks?.Count ?? 0;
         
         Width = Math.Max(ActualWidth, totalDays * ZoomLevel * 2);
-        Height = Math.Max(ActualHeight, TIMELINE_HEADER_HEIGHT + (taskCount * TASK_ROW_HEIGHT) + 20);
+        
+        // Calculate height based on categories and tasks
+        if (Tasks != null && Tasks.Count > 0)
+        {
+            var categoryCount = Tasks.GroupBy(t => t.Category).Count();
+            var totalHeight = TIMELINE_HEADER_HEIGHT + 
+                             (categoryCount * (CATEGORY_HEADER_HEIGHT + CATEGORY_SPACING * 2)) + 
+                             (taskCount * TASK_ROW_HEIGHT) + 20;
+            Height = Math.Max(ActualHeight, totalHeight);
+        }
+        else
+        {
+            Height = Math.Max(ActualHeight, TIMELINE_HEADER_HEIGHT + 100);
+        }
     }
 
     private ScrollViewer? FindScrollViewer()
@@ -614,6 +756,251 @@ public class GanttTimelineCanvas : Canvas
             parent = LogicalTreeHelper.GetParent(parent);
         }
         return parent as ScrollViewer;
+    }
+
+    private void ApplyViewModeSettings()
+    {
+        var (minZoom, maxZoom) = TimelineViewConfig.GetZoomRange(ViewMode);
+        ZoomLevel = Math.Max(minZoom, Math.Min(maxZoom, ZoomLevel));
+    }
+
+    private (bool isMajor, bool isMinor) GetGridLineType(DateTime date)
+    {
+        return ViewMode switch
+        {
+            TimelineViewMode.Daily => (date.Day == 1, date.DayOfWeek == DayOfWeek.Monday),
+            TimelineViewMode.Weekly => (date.Day == 1, date.DayOfWeek == DayOfWeek.Monday),
+            TimelineViewMode.Monthly => (date.Month == 1, date.Day == 1),
+            TimelineViewMode.Quarterly => (date.Month == 1, date.Month % 3 == 1),
+            TimelineViewMode.Yearly => (date.Year % 5 == 0, date.Month == 1),
+            _ => (date.Day == 1, date.DayOfWeek == DayOfWeek.Monday)
+        };
+    }
+
+    private DateTime GetNextGridDate(DateTime current)
+    {
+        return ViewMode switch
+        {
+            TimelineViewMode.Daily => current.AddDays(1),
+            TimelineViewMode.Weekly => current.AddDays(1),
+            TimelineViewMode.Monthly => current.AddDays(7),
+            TimelineViewMode.Quarterly => current.AddMonths(1),
+            TimelineViewMode.Yearly => current.AddMonths(3),
+            _ => current.AddDays(1)
+        };
+    }
+
+    private void DrawDailyHeader(double pixelsPerDay)
+    {
+        // Month header
+        var currentMonth = new DateTime(TimelineStart.Year, TimelineStart.Month, 1);
+        while (currentMonth <= TimelineEnd)
+        {
+            var nextMonth = currentMonth.AddMonths(1);
+            var monthEnd = nextMonth > TimelineEnd ? TimelineEnd : nextMonth;
+            
+            var startX = Math.Max(0, (currentMonth - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (monthEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 60)
+            {
+                CreateHeaderLabel(currentMonth.ToString("MMM yyyy"), startX, width, 8, 14, FontWeights.SemiBold, Brushes.DarkBlue);
+            }
+            currentMonth = nextMonth;
+        }
+
+        // Day labels
+        var currentDate = TimelineStart.Date;
+        while (currentDate <= TimelineEnd)
+        {
+            var x = (currentDate - TimelineStart).TotalDays * pixelsPerDay;
+            var dayWidth = pixelsPerDay;
+
+            if (dayWidth > 25)
+            {
+                CreateHeaderLabel(currentDate.ToString("dd"), x, dayWidth, 32, 11, FontWeights.Normal, Brushes.Gray);
+            }
+            currentDate = currentDate.AddDays(1);
+        }
+    }
+
+    private void DrawWeeklyHeader(double pixelsPerDay)
+    {
+        // Month header
+        var currentMonth = new DateTime(TimelineStart.Year, TimelineStart.Month, 1);
+        while (currentMonth <= TimelineEnd)
+        {
+            var nextMonth = currentMonth.AddMonths(1);
+            var monthEnd = nextMonth > TimelineEnd ? TimelineEnd : nextMonth;
+            
+            var startX = Math.Max(0, (currentMonth - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (monthEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 60)
+            {
+                CreateHeaderLabel(currentMonth.ToString("MMM yyyy"), startX, width, 8, 14, FontWeights.SemiBold, Brushes.DarkBlue);
+            }
+            currentMonth = nextMonth;
+        }
+
+        // Week labels
+        var currentWeek = TimelineStart.Date;
+        while (currentWeek.DayOfWeek != DayOfWeek.Monday && currentWeek > TimelineStart.AddDays(-7))
+            currentWeek = currentWeek.AddDays(-1);
+
+        while (currentWeek <= TimelineEnd)
+        {
+            var weekEnd = currentWeek.AddDays(7);
+            var actualWeekEnd = weekEnd > TimelineEnd ? TimelineEnd : weekEnd;
+            
+            var startX = Math.Max(0, (currentWeek - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (actualWeekEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 40)
+            {
+                CreateHeaderLabel($"Week {GetWeekOfYear(currentWeek)}", startX, width, 32, 10, FontWeights.Normal, Brushes.Gray);
+            }
+            currentWeek = currentWeek.AddDays(7);
+        }
+    }
+
+    private void DrawMonthlyHeader(double pixelsPerDay)
+    {
+        // Year header
+        var currentYear = TimelineStart.Year;
+        while (currentYear <= TimelineEnd.Year)
+        {
+            var yearStart = new DateTime(currentYear, 1, 1);
+            var yearEnd = new DateTime(currentYear, 12, 31);
+            
+            var startX = Math.Max(0, (yearStart - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (yearEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 80)
+            {
+                CreateHeaderLabel(currentYear.ToString(), startX, width, 8, 16, FontWeights.Bold, Brushes.DarkBlue);
+            }
+            currentYear++;
+        }
+
+        // Month labels
+        var currentMonth = new DateTime(TimelineStart.Year, TimelineStart.Month, 1);
+        while (currentMonth <= TimelineEnd)
+        {
+            var nextMonth = currentMonth.AddMonths(1);
+            var monthEnd = nextMonth > TimelineEnd ? TimelineEnd : nextMonth;
+            
+            var startX = Math.Max(0, (currentMonth - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (monthEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 30)
+            {
+                CreateHeaderLabel(currentMonth.ToString("MMM"), startX, width, 32, 12, FontWeights.Normal, Brushes.Gray);
+            }
+            currentMonth = nextMonth;
+        }
+    }
+
+    private void DrawQuarterlyHeader(double pixelsPerDay)
+    {
+        // Year header
+        var currentYear = TimelineStart.Year;
+        while (currentYear <= TimelineEnd.Year)
+        {
+            var yearStart = new DateTime(currentYear, 1, 1);
+            var yearEnd = new DateTime(currentYear, 12, 31);
+            
+            var startX = Math.Max(0, (yearStart - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (yearEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 100)
+            {
+                CreateHeaderLabel(currentYear.ToString(), startX, width, 8, 16, FontWeights.Bold, Brushes.DarkBlue);
+            }
+            currentYear++;
+        }
+
+        // Quarter labels
+        var currentQuarter = new DateTime(TimelineStart.Year, ((TimelineStart.Month - 1) / 3) * 3 + 1, 1);
+        while (currentQuarter <= TimelineEnd)
+        {
+            var nextQuarter = currentQuarter.AddMonths(3);
+            var quarterEnd = nextQuarter > TimelineEnd ? TimelineEnd : nextQuarter;
+            
+            var startX = Math.Max(0, (currentQuarter - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (quarterEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 50)
+            {
+                var quarter = (currentQuarter.Month - 1) / 3 + 1;
+                CreateHeaderLabel($"Q{quarter}", startX, width, 32, 12, FontWeights.Normal, Brushes.Gray);
+            }
+            currentQuarter = nextQuarter;
+        }
+    }
+
+    private void DrawYearlyHeader(double pixelsPerDay)
+    {
+        // Decade header (optional for very long projects)
+        var currentDecade = (TimelineStart.Year / 10) * 10;
+        while (currentDecade <= TimelineEnd.Year)
+        {
+            var decadeStart = new DateTime(currentDecade, 1, 1);
+            var decadeEnd = new DateTime(currentDecade + 9, 12, 31);
+            
+            var startX = Math.Max(0, (decadeStart - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (decadeEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 120)
+            {
+                CreateHeaderLabel($"{currentDecade}s", startX, width, 8, 16, FontWeights.Bold, Brushes.DarkBlue);
+            }
+            currentDecade += 10;
+        }
+
+        // Year labels
+        var currentYear = TimelineStart.Year;
+        while (currentYear <= TimelineEnd.Year)
+        {
+            var yearStart = new DateTime(currentYear, 1, 1);
+            var yearEnd = new DateTime(currentYear, 12, 31);
+            
+            var startX = Math.Max(0, (yearStart - TimelineStart).TotalDays * pixelsPerDay);
+            var endX = (yearEnd - TimelineStart).TotalDays * pixelsPerDay;
+            var width = endX - startX;
+
+            if (width > 40)
+            {
+                CreateHeaderLabel(currentYear.ToString(), startX, width, 32, 12, FontWeights.Normal, Brushes.Gray);
+            }
+            currentYear++;
+        }
+    }
+
+    private void CreateHeaderLabel(string text, double startX, double width, double topOffset, double fontSize, FontWeight fontWeight, Brush foreground)
+    {
+        var label = new TextBlock
+        {
+            Text = text,
+            FontSize = fontSize,
+            FontWeight = fontWeight,
+            Foreground = foreground,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        Canvas.SetLeft(label, startX + (width - text.Length * fontSize * 0.6) / 2);
+        Canvas.SetTop(label, topOffset);
+        Children.Add(label);
+        _timelineLabels.Add(label);
     }
 
     private static int GetWeekOfYear(DateTime date)

@@ -4,7 +4,11 @@
       "Bash(dotnet --info)",
       "Bash(dotnet build:*)",
       "Bash(dotnet run:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(taskkill:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet ef migrations:*)",
+      "Bash(dotnet tool install:*)"
     ],
     "deny": []
   }

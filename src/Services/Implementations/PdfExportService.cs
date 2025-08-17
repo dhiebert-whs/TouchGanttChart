@@ -40,7 +40,7 @@ public class PdfExportService : IPdfExportService
 
             await Task.Run(() =>
             {
-                Document.Create(container =>
+                var document = Document.Create(container =>
                 {
                     container.Page(page =>
                     {
@@ -76,18 +76,17 @@ public class PdfExportService : IPdfExportService
 
                         page.Footer()
                             .AlignCenter()
-                            .Text(x =>
+                            .Text(text => 
                             {
-                                x.Span("Page ");
-                                x.CurrentPageNumber();
-                                x.Span(" of ");
-                                x.TotalPages();
-                            })
-                            .FontSize(9)
-                            .FontColor(Colors.Grey.Darken1);
+                                text.Span("Page ");
+                                text.CurrentPageNumber();
+                                text.Span(" of ");
+                                text.TotalPages();
+                            });
                     });
-                })
-                .GeneratePdf(filePath);
+                });
+                
+                document.GeneratePdf(filePath);
             });
 
             _logger.LogInformation("Successfully exported project '{ProjectName}' to {FilePath}", 
@@ -118,7 +117,7 @@ public class PdfExportService : IPdfExportService
 
             await Task.Run(() =>
             {
-                Document.Create(container =>
+                var document = Document.Create(container =>
                 {
                     container.Page(page =>
                     {
@@ -145,18 +144,17 @@ public class PdfExportService : IPdfExportService
 
                         page.Footer()
                             .AlignCenter()
-                            .Text(x =>
+                            .Text(text => 
                             {
-                                x.Span("Page ");
-                                x.CurrentPageNumber();
-                                x.Span(" of ");
-                                x.TotalPages();
-                            })
-                            .FontSize(9)
-                            .FontColor(Colors.Grey.Darken1);
+                                text.Span("Page ");
+                                text.CurrentPageNumber();
+                                text.Span(" of ");
+                                text.TotalPages();
+                            });
                     });
-                })
-                .GeneratePdf(filePath);
+                });
+                
+                document.GeneratePdf(filePath);
             });
 
             _logger.LogInformation("Timeline PDF export completed: {FilePath}", filePath);
@@ -183,7 +181,7 @@ public class PdfExportService : IPdfExportService
 
             await Task.Run(() =>
             {
-                Document.Create(container =>
+                var document = Document.Create(container =>
                 {
                     container.Page(page =>
                     {
@@ -202,18 +200,17 @@ public class PdfExportService : IPdfExportService
 
                         page.Footer()
                             .AlignCenter()
-                            .Text(x =>
+                            .Text(text => 
                             {
-                                x.Span("Page ");
-                                x.CurrentPageNumber();
-                                x.Span(" of ");
-                                x.TotalPages();
-                            })
-                            .FontSize(9)
-                            .FontColor(Colors.Grey.Darken1);
+                                text.Span("Page ");
+                                text.CurrentPageNumber();
+                                text.Span(" of ");
+                                text.TotalPages();
+                            });
                     });
-                })
-                .GeneratePdf(filePath);
+                });
+                
+                document.GeneratePdf(filePath);
             });
 
             _logger.LogInformation("Successfully exported project summary to {FilePath}", filePath);
@@ -240,7 +237,7 @@ public class PdfExportService : IPdfExportService
 
             await Task.Run(() =>
             {
-                Document.Create(container =>
+                var document = Document.Create(container =>
                 {
                     container.Page(page =>
                     {
@@ -259,18 +256,17 @@ public class PdfExportService : IPdfExportService
 
                         page.Footer()
                             .AlignCenter()
-                            .Text(x =>
+                            .Text(text => 
                             {
-                                x.Span("Page ");
-                                x.CurrentPageNumber();
-                                x.Span(" of ");
-                                x.TotalPages();
-                            })
-                            .FontSize(9)
-                            .FontColor(Colors.Grey.Darken1);
+                                text.Span("Page ");
+                                text.CurrentPageNumber();
+                                text.Span(" of ");
+                                text.TotalPages();
+                            });
                     });
-                })
-                .GeneratePdf(filePath);
+                });
+                
+                document.GeneratePdf(filePath);
             });
 
             _logger.LogInformation("Successfully exported task list to {FilePath}", filePath);
@@ -432,26 +428,9 @@ public class PdfExportService : IPdfExportService
                 {
                     row.ConstantItem(3, Unit.Centimetre).Text(task.Name).FontSize(9);
                     
-                    // Simple timeline bar representation
-                    row.RelativeItem().Canvas((canvas, size) =>
-                    {
-                        var totalDays = (endDate - startDate).TotalDays;
-                        var taskStart = (task.StartDate - startDate).TotalDays;
-                        var taskDuration = (task.EndDate - task.StartDate).TotalDays;
-                        
-                        if (totalDays > 0)
-                        {
-                            var startPercent = taskStart / totalDays;
-                            var widthPercent = taskDuration / totalDays;
-                            
-                            var barX = (float)(startPercent * size.Width);
-                            var barWidth = (float)(widthPercent * size.Width);
-                            
-                            canvas.DrawRectangle(new QuestPDF.Infrastructure.Point(barX, 2), 
-                                               new QuestPDF.Infrastructure.Size(Math.Max(barWidth, 5), 10), 
-                                               GetTaskColor(task.Status));
-                        }
-                    });
+                    // Simple timeline bar representation using background color
+                    row.RelativeItem().Background(GetTaskColor(task.Status))
+                        .Height(10).AlignMiddle();
                 });
             }
         });
