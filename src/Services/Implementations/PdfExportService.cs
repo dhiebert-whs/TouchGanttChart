@@ -1,30 +1,28 @@
-using IronPdf;
 using Microsoft.Extensions.Logging;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using System.IO;
-using System.Text;
 using TouchGanttChart.Models;
 using TouchGanttChart.Services.Interfaces;
 
 namespace TouchGanttChart.Services.Implementations;
 
 /// <summary>
-/// Implementation of PDF export operations using IronPDF.
+/// Service for exporting Gantt chart data to PDF format using QuestPDF (free library).
+/// Provides professional-looking reports optimized for touch devices and large displays.
 /// </summary>
 public class PdfExportService : IPdfExportService
 {
     private readonly ILogger<PdfExportService> _logger;
     private const string DefaultExportPath = "Exports";
 
-    /// <summary>
-    /// Initializes a new instance of the PdfExportService class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
     public PdfExportService(ILogger<PdfExportService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         
-        // Initialize IronPDF
-        License.LicenseKey = ""; // Free version for now
+        // Configure QuestPDF license for community usage (free)
+        QuestPDF.Settings.License = LicenseType.Community;
         EnsureExportDirectoryExists();
     }
 
@@ -38,27 +36,59 @@ public class PdfExportService : IPdfExportService
 
             _logger.LogInformation("Exporting project '{ProjectName}' to PDF", project.Name);
 
-            if (!ValidateExportParameters(project, tasks))
-            {
-                throw new ArgumentException("Invalid export parameters");
-            }
-
             filePath ??= GenerateDefaultFilePath($"{SanitizeFileName(project.Name)}_Project_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
-            var html = GenerateProjectHtml(project, tasks.ToList());
-            var renderer = new ChromePdfRenderer();
-            
-            // Configure PDF settings for professional output
-            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Portrait;
-            renderer.RenderingOptions.MarginTop = 40;
-            renderer.RenderingOptions.MarginBottom = 40;
-            renderer.RenderingOptions.MarginLeft = 20;
-            renderer.RenderingOptions.MarginRight = 20;
-            renderer.RenderingOptions.PrintHtmlBackgrounds = true;
+            await Task.Run(() =>
+            {
+                Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4.Landscape());
+                        page.Margin(1, Unit.Centimetre);
+                        page.PageColor(Colors.White);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
 
-            var pdf = renderer.RenderHtmlAsPdf(html);
-            pdf.SaveAs(filePath);
+                        page.Header()
+                            .Row(row =>
+                            {
+                                row.RelativeItem().Column(column =>
+                                {
+                                    column.Item().Text($"Project: {project.Name}")
+                                        .FontSize(18).SemiBold().FontColor(Colors.Blue.Darken2);
+                                    column.Item().Text($"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm}")
+                                        .FontSize(10).FontColor(Colors.Grey.Darken1);
+                                });
+                            });
+
+                        page.Content()
+                            .PaddingVertical(1, Unit.Centimetre)
+                            .Column(column =>
+                            {
+                                // Project Overview
+                                column.Item().Element(container => ProjectOverviewSection(container, project));
+                                
+                                column.Item().PaddingTop(0.5f, Unit.Centimetre);
+                                
+                                // Tasks Table
+                                column.Item().Element(container => TasksTableSection(container, tasks));
+                            });
+
+                        page.Footer()
+                            .AlignCenter()
+                            .Text(x =>
+                            {
+                                x.Span("Page ");
+                                x.CurrentPageNumber();
+                                x.Span(" of ");
+                                x.TotalPages();
+                            })
+                            .FontSize(9)
+                            .FontColor(Colors.Grey.Darken1);
+                    });
+                })
+                .GeneratePdf(filePath);
+            });
 
             _logger.LogInformation("Successfully exported project '{ProjectName}' to {FilePath}", 
                 project.Name, filePath);
@@ -86,28 +116,55 @@ public class PdfExportService : IPdfExportService
 
             filePath ??= GenerateDefaultFilePath($"{SanitizeFileName(project.Name)}_Timeline_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
-            var html = GenerateTimelineHtml(project, tasks.ToList(), startDate, endDate);
-            var renderer = new ChromePdfRenderer();
-            
-            // Configure for landscape timeline view
-            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Landscape;
-            renderer.RenderingOptions.MarginTop = 20;
-            renderer.RenderingOptions.MarginBottom = 20;
-            renderer.RenderingOptions.MarginLeft = 15;
-            renderer.RenderingOptions.MarginRight = 15;
-            renderer.RenderingOptions.PrintHtmlBackgrounds = true;
+            await Task.Run(() =>
+            {
+                Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4.Landscape());
+                        page.Margin(1, Unit.Centimetre);
+                        page.PageColor(Colors.White);
+                        page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Arial));
 
-            var pdf = renderer.RenderHtmlAsPdf(html);
-            pdf.SaveAs(filePath);
+                        page.Header()
+                            .Row(row =>
+                            {
+                                row.RelativeItem().Column(column =>
+                                {
+                                    column.Item().Text($"Timeline: {project.Name}")
+                                        .FontSize(16).SemiBold().FontColor(Colors.Blue.Darken2);
+                                    column.Item().Text($"Project Duration: {project.DurationDisplay}")
+                                        .FontSize(10).FontColor(Colors.Grey.Darken1);
+                                });
+                            });
 
-            _logger.LogInformation("Successfully exported timeline to {FilePath}", filePath);
+                        page.Content()
+                            .PaddingVertical(1, Unit.Centimetre)
+                            .Element(container => TimelineSection(container, project, tasks, startDate, endDate));
 
+                        page.Footer()
+                            .AlignCenter()
+                            .Text(x =>
+                            {
+                                x.Span("Page ");
+                                x.CurrentPageNumber();
+                                x.Span(" of ");
+                                x.TotalPages();
+                            })
+                            .FontSize(9)
+                            .FontColor(Colors.Grey.Darken1);
+                    });
+                })
+                .GeneratePdf(filePath);
+            });
+
+            _logger.LogInformation("Timeline PDF export completed: {FilePath}", filePath);
             return filePath;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error exporting timeline for project '{ProjectName}'", project?.Name);
+            _logger.LogError(ex, "Error exporting timeline to PDF: {ProjectName}", project?.Name);
             throw;
         }
     }
@@ -124,22 +181,42 @@ public class PdfExportService : IPdfExportService
 
             filePath ??= GenerateDefaultFilePath($"{SanitizeFileName(project.Name)}_Summary_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
-            var html = GenerateProjectSummaryHtml(project, statistics);
-            var renderer = new ChromePdfRenderer();
-            
-            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Portrait;
-            renderer.RenderingOptions.MarginTop = 40;
-            renderer.RenderingOptions.MarginBottom = 40;
-            renderer.RenderingOptions.MarginLeft = 20;
-            renderer.RenderingOptions.MarginRight = 20;
-            renderer.RenderingOptions.PrintHtmlBackgrounds = true;
+            await Task.Run(() =>
+            {
+                Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(2, Unit.Centimetre);
+                        page.PageColor(Colors.White);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
 
-            var pdf = renderer.RenderHtmlAsPdf(html);
-            pdf.SaveAs(filePath);
+                        page.Header()
+                            .Text($"Project Summary: {project.Name}")
+                            .FontSize(18).SemiBold().FontColor(Colors.Blue.Darken2);
+
+                        page.Content()
+                            .PaddingVertical(1, Unit.Centimetre)
+                            .Element(container => ProjectSummarySection(container, project, statistics));
+
+                        page.Footer()
+                            .AlignCenter()
+                            .Text(x =>
+                            {
+                                x.Span("Page ");
+                                x.CurrentPageNumber();
+                                x.Span(" of ");
+                                x.TotalPages();
+                            })
+                            .FontSize(9)
+                            .FontColor(Colors.Grey.Darken1);
+                    });
+                })
+                .GeneratePdf(filePath);
+            });
 
             _logger.LogInformation("Successfully exported project summary to {FilePath}", filePath);
-
             return filePath;
         }
         catch (Exception ex)
@@ -161,22 +238,42 @@ public class PdfExportService : IPdfExportService
 
             filePath ??= GenerateDefaultFilePath($"TaskList_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
-            var html = GenerateTaskListHtml(taskList);
-            var renderer = new ChromePdfRenderer();
-            
-            renderer.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.A4;
-            renderer.RenderingOptions.PaperOrientation = IronPdf.Rendering.PdfPaperOrientation.Portrait;
-            renderer.RenderingOptions.MarginTop = 40;
-            renderer.RenderingOptions.MarginBottom = 40;
-            renderer.RenderingOptions.MarginLeft = 20;
-            renderer.RenderingOptions.MarginRight = 20;
-            renderer.RenderingOptions.PrintHtmlBackgrounds = true;
+            await Task.Run(() =>
+            {
+                Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(2, Unit.Centimetre);
+                        page.PageColor(Colors.White);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
 
-            var pdf = renderer.RenderHtmlAsPdf(html);
-            pdf.SaveAs(filePath);
+                        page.Header()
+                            .Text("Detailed Task Report")
+                            .FontSize(18).SemiBold().FontColor(Colors.Blue.Darken2);
+
+                        page.Content()
+                            .PaddingVertical(1, Unit.Centimetre)
+                            .Element(container => DetailedTasksSection(container, tasks));
+
+                        page.Footer()
+                            .AlignCenter()
+                            .Text(x =>
+                            {
+                                x.Span("Page ");
+                                x.CurrentPageNumber();
+                                x.Span(" of ");
+                                x.TotalPages();
+                            })
+                            .FontSize(9)
+                            .FontColor(Colors.Grey.Darken1);
+                    });
+                })
+                .GeneratePdf(filePath);
+            });
 
             _logger.LogInformation("Successfully exported task list to {FilePath}", filePath);
-
             return filePath;
         }
         catch (Exception ex)
@@ -216,371 +313,225 @@ public class PdfExportService : IPdfExportService
         return true;
     }
 
-    #region HTML Generation Methods
+    #region Private Helper Methods
 
-    private string GenerateProjectHtml(Project project, List<GanttTask> tasks)
+    private void ProjectOverviewSection(IContainer container, Project project)
     {
-        var html = new StringBuilder();
-        
-        html.AppendLine("<!DOCTYPE html>");
-        html.AppendLine("<html>");
-        html.AppendLine("<head>");
-        html.AppendLine("<meta charset='utf-8'>");
-        html.AppendLine("<title>Project Report</title>");
-        html.AppendLine(GetCommonStyles());
-        html.AppendLine("</head>");
-        html.AppendLine("<body>");
-        
-        // Header
-        html.AppendLine("<div class='header'>");
-        html.AppendLine($"<h1>{EscapeHtml(project.Name)}</h1>");
-        html.AppendLine($"<p class='subtitle'>Project Report - Generated {DateTime.Now:yyyy-MM-dd HH:mm}</p>");
-        html.AppendLine("</div>");
-        
-        // Project Information
-        html.AppendLine("<div class='section'>");
-        html.AppendLine("<h2>Project Information</h2>");
-        html.AppendLine("<table class='info-table'>");
-        html.AppendLine($"<tr><td><strong>Project Manager:</strong></td><td>{EscapeHtml(project.ProjectManager)}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Start Date:</strong></td><td>{project.StartDate:yyyy-MM-dd}</td></tr>");
-        html.AppendLine($"<tr><td><strong>End Date:</strong></td><td>{project.EndDate:yyyy-MM-dd}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Status:</strong></td><td>{project.Status}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Priority:</strong></td><td>{project.Priority}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Progress:</strong></td><td>{project.ProgressDisplay}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Duration:</strong></td><td>{project.DurationDisplay}</td></tr>");
-        if (project.Budget > 0)
+        container.Column(column =>
         {
-            html.AppendLine($"<tr><td><strong>Budget:</strong></td><td>{project.Budget:C}</td></tr>");
-            html.AppendLine($"<tr><td><strong>Actual Cost:</strong></td><td>{project.ActualCost:C}</td></tr>");
-        }
-        html.AppendLine("</table>");
-        
-        if (!string.IsNullOrWhiteSpace(project.Description))
-        {
-            html.AppendLine($"<p><strong>Description:</strong></p>");
-            html.AppendLine($"<p>{EscapeHtml(project.Description)}</p>");
-        }
-        html.AppendLine("</div>");
-        
-        // Task List
-        if (tasks.Any())
-        {
-            html.AppendLine("<div class='section'>");
-            html.AppendLine("<h2>Tasks</h2>");
-            html.AppendLine(GenerateTaskTable(tasks));
-            html.AppendLine("</div>");
-        }
-        
-        html.AppendLine("</body>");
-        html.AppendLine("</html>");
-        
-        return html.ToString();
-    }
-
-    private string GenerateTimelineHtml(Project project, List<GanttTask> tasks, DateTime startDate, DateTime endDate)
-    {
-        var html = new StringBuilder();
-        
-        html.AppendLine("<!DOCTYPE html>");
-        html.AppendLine("<html>");
-        html.AppendLine("<head>");
-        html.AppendLine("<meta charset='utf-8'>");
-        html.AppendLine("<title>Timeline Report</title>");
-        html.AppendLine(GetCommonStyles());
-        html.AppendLine(GetTimelineStyles());
-        html.AppendLine("</head>");
-        html.AppendLine("<body>");
-        
-        // Header
-        html.AppendLine("<div class='header'>");
-        html.AppendLine($"<h1>{EscapeHtml(project.Name)} - Timeline</h1>");
-        html.AppendLine($"<p class='subtitle'>{startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}</p>");
-        html.AppendLine("</div>");
-        
-        // Timeline visualization (simplified for PDF)
-        html.AppendLine("<div class='section'>");
-        html.AppendLine("<h2>Project Timeline</h2>");
-        html.AppendLine(GenerateSimpleTimeline(tasks, startDate, endDate));
-        html.AppendLine("</div>");
-        
-        html.AppendLine("</body>");
-        html.AppendLine("</html>");
-        
-        return html.ToString();
-    }
-
-    private string GenerateProjectSummaryHtml(Project project, ProjectStatistics statistics)
-    {
-        var html = new StringBuilder();
-        
-        html.AppendLine("<!DOCTYPE html>");
-        html.AppendLine("<html>");
-        html.AppendLine("<head>");
-        html.AppendLine("<meta charset='utf-8'>");
-        html.AppendLine("<title>Project Summary</title>");
-        html.AppendLine(GetCommonStyles());
-        html.AppendLine("</head>");
-        html.AppendLine("<body>");
-        
-        // Header
-        html.AppendLine("<div class='header'>");
-        html.AppendLine($"<h1>{EscapeHtml(project.Name)} - Summary</h1>");
-        html.AppendLine($"<p class='subtitle'>Generated {DateTime.Now:yyyy-MM-dd HH:mm}</p>");
-        html.AppendLine("</div>");
-        
-        // Statistics
-        html.AppendLine("<div class='section'>");
-        html.AppendLine("<h2>Project Statistics</h2>");
-        html.AppendLine("<table class='info-table'>");
-        html.AppendLine($"<tr><td><strong>Total Tasks:</strong></td><td>{statistics.TotalTasks}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Completed Tasks:</strong></td><td>{statistics.CompletedTasks}</td></tr>");
-        html.AppendLine($"<tr><td><strong>In Progress Tasks:</strong></td><td>{statistics.InProgressTasks}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Overdue Tasks:</strong></td><td>{statistics.OverdueTasks}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Progress:</strong></td><td>{statistics.ProgressPercentage:F1}%</td></tr>");
-        html.AppendLine($"<tr><td><strong>Estimated Hours:</strong></td><td>{statistics.TotalEstimatedHours:F1}</td></tr>");
-        html.AppendLine($"<tr><td><strong>Actual Hours:</strong></td><td>{statistics.TotalActualHours:F1}</td></tr>");
-        if (statistics.TotalEstimatedHours > 0)
-        {
-            var efficiency = (statistics.TotalActualHours / statistics.TotalEstimatedHours) * 100;
-            html.AppendLine($"<tr><td><strong>Time Efficiency:</strong></td><td>{efficiency:F1}%</td></tr>");
-        }
-        html.AppendLine("</table>");
-        html.AppendLine("</div>");
-        
-        html.AppendLine("</body>");
-        html.AppendLine("</html>");
-        
-        return html.ToString();
-    }
-
-    private string GenerateTaskListHtml(List<GanttTask> tasks)
-    {
-        var html = new StringBuilder();
-        
-        html.AppendLine("<!DOCTYPE html>");
-        html.AppendLine("<html>");
-        html.AppendLine("<head>");
-        html.AppendLine("<meta charset='utf-8'>");
-        html.AppendLine("<title>Task List</title>");
-        html.AppendLine(GetCommonStyles());
-        html.AppendLine("</head>");
-        html.AppendLine("<body>");
-        
-        // Header
-        html.AppendLine("<div class='header'>");
-        html.AppendLine("<h1>Task List</h1>");
-        html.AppendLine($"<p class='subtitle'>Generated {DateTime.Now:yyyy-MM-dd HH:mm}</p>");
-        html.AppendLine("</div>");
-        
-        // Task List
-        html.AppendLine("<div class='section'>");
-        html.AppendLine(GenerateTaskTable(tasks));
-        html.AppendLine("</div>");
-        
-        html.AppendLine("</body>");
-        html.AppendLine("</html>");
-        
-        return html.ToString();
-    }
-
-    private string GenerateTaskTable(List<GanttTask> tasks)
-    {
-        var html = new StringBuilder();
-        
-        html.AppendLine("<table class='task-table'>");
-        html.AppendLine("<thead>");
-        html.AppendLine("<tr>");
-        html.AppendLine("<th>Task Name</th>");
-        html.AppendLine("<th>Start Date</th>");
-        html.AppendLine("<th>End Date</th>");
-        html.AppendLine("<th>Status</th>");
-        html.AppendLine("<th>Priority</th>");
-        html.AppendLine("<th>Assignee</th>");
-        html.AppendLine("<th>Progress</th>");
-        html.AppendLine("</tr>");
-        html.AppendLine("</thead>");
-        html.AppendLine("<tbody>");
-        
-        foreach (var task in tasks.OrderBy(t => t.StartDate))
-        {
-            var statusClass = task.Status.ToString().ToLowerInvariant();
-            var priorityClass = task.Priority.ToString().ToLowerInvariant();
+            column.Item().Text("Project Overview").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken1);
             
-            html.AppendLine("<tr>");
-            html.AppendLine($"<td>{EscapeHtml(task.Name)}</td>");
-            html.AppendLine($"<td>{task.StartDate:yyyy-MM-dd}</td>");
-            html.AppendLine($"<td>{task.EndDate:yyyy-MM-dd}</td>");
-            html.AppendLine($"<td><span class='status-{statusClass}'>{task.Status}</span></td>");
-            html.AppendLine($"<td><span class='priority-{priorityClass}'>{task.Priority}</span></td>");
-            html.AppendLine($"<td>{EscapeHtml(task.Assignee)}</td>");
-            html.AppendLine($"<td>{task.ProgressDisplay}</td>");
-            html.AppendLine("</tr>");
-        }
-        
-        html.AppendLine("</tbody>");
-        html.AppendLine("</table>");
-        
-        return html.ToString();
-    }
+            column.Item().PaddingTop(0.2f, Unit.Centimetre).Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(3, Unit.Centimetre);
+                    columns.RelativeColumn();
+                });
 
-    private string GenerateSimpleTimeline(List<GanttTask> tasks, DateTime startDate, DateTime endDate)
-    {
-        var html = new StringBuilder();
-        var totalDays = (endDate - startDate).Days;
-        
-        html.AppendLine("<div class='timeline-container'>");
-        
-        foreach (var task in tasks.OrderBy(t => t.StartDate))
+                table.Cell().Element(CellStyle).Text("Project Manager:").SemiBold();
+                table.Cell().Element(CellStyle).Text(project.ProjectManager);
+
+                table.Cell().Element(CellStyle).Text("Start Date:").SemiBold();
+                table.Cell().Element(CellStyle).Text(project.StartDate.ToString("yyyy-MM-dd"));
+
+                table.Cell().Element(CellStyle).Text("End Date:").SemiBold();
+                table.Cell().Element(CellStyle).Text(project.EndDate.ToString("yyyy-MM-dd"));
+
+                table.Cell().Element(CellStyle).Text("Status:").SemiBold();
+                table.Cell().Element(CellStyle).Text(project.Status.ToString());
+
+                table.Cell().Element(CellStyle).Text("Progress:").SemiBold();
+                table.Cell().Element(CellStyle).Text(project.ProgressDisplay);
+
+                table.Cell().Element(CellStyle).Text("Budget:").SemiBold();
+                table.Cell().Element(CellStyle).Text($"${project.Budget:N2}");
+
+                table.Cell().Element(CellStyle).Text("Health Status:").SemiBold();
+                table.Cell().Element(CellStyle).Text(project.HealthStatus);
+            });
+        });
+
+        static IContainer CellStyle(IContainer container)
         {
-            var taskStartDays = Math.Max(0, (task.StartDate - startDate).Days);
-            var taskEndDays = Math.Min(totalDays, (task.EndDate - startDate).Days);
-            var taskDuration = Math.Max(1, taskEndDays - taskStartDays);
-            
-            var leftPercent = (double)taskStartDays / totalDays * 100;
-            var widthPercent = (double)taskDuration / totalDays * 100;
-            
-            var statusClass = task.Status.ToString().ToLowerInvariant();
-            
-            html.AppendLine("<div class='timeline-row'>");
-            html.AppendLine($"<div class='task-label'>{EscapeHtml(task.Name)}</div>");
-            html.AppendLine("<div class='timeline-bar-container'>");
-            html.AppendLine($"<div class='timeline-bar timeline-{statusClass}' style='left: {leftPercent:F1}%; width: {widthPercent:F1}%;'></div>");
-            html.AppendLine("</div>");
-            html.AppendLine("</div>");
+            return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
         }
-        
-        html.AppendLine("</div>");
-        
-        return html.ToString();
     }
 
-    #endregion
-
-    #region Style Methods
-
-    private string GetCommonStyles()
+    private void TasksTableSection(IContainer container, IEnumerable<GanttTask> tasks)
     {
-        return @"
-<style>
-body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    line-height: 1.6; 
-    color: #333; 
-    margin: 0; 
-    padding: 20px; 
-}
-.header { 
-    text-align: center; 
-    margin-bottom: 30px; 
-    border-bottom: 2px solid #2c3e50; 
-    padding-bottom: 20px; 
-}
-.header h1 { 
-    color: #2c3e50; 
-    margin: 0; 
-    font-size: 2em; 
-}
-.subtitle { 
-    color: #7f8c8d; 
-    margin: 10px 0 0 0; 
-    font-style: italic; 
-}
-.section { 
-    margin-bottom: 30px; 
-}
-.section h2 { 
-    color: #34495e; 
-    border-bottom: 1px solid #bdc3c7; 
-    padding-bottom: 10px; 
-}
-.info-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-bottom: 20px; 
-}
-.info-table td { 
-    padding: 8px 12px; 
-    border-bottom: 1px solid #ecf0f1; 
-}
-.info-table td:first-child { 
-    width: 30%; 
-    background-color: #f8f9fa; 
-}
-.task-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-bottom: 20px; 
-}
-.task-table th, .task-table td { 
-    padding: 8px 12px; 
-    text-align: left; 
-    border-bottom: 1px solid #ddd; 
-}
-.task-table th { 
-    background-color: #f8f9fa; 
-    font-weight: bold; 
-    color: #2c3e50; 
-}
-.task-table tr:nth-child(even) { 
-    background-color: #f8f9fa; 
-}
-.status-completed { background-color: #d4edda; color: #155724; padding: 2px 6px; border-radius: 3px; }
-.status-inprogress { background-color: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 3px; }
-.status-notstarted { background-color: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 3px; }
-.status-onhold { background-color: #e2e3e5; color: #383d41; padding: 2px 6px; border-radius: 3px; }
-.status-cancelled { background-color: #f5c6cb; color: #721c24; padding: 2px 6px; border-radius: 3px; }
-.priority-low { color: #28a745; }
-.priority-normal { color: #6c757d; }
-.priority-high { color: #fd7e14; }
-.priority-critical { color: #dc3545; font-weight: bold; }
-</style>";
+        container.Column(column =>
+        {
+            column.Item().Text("Tasks Summary").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken1);
+            
+            column.Item().PaddingTop(0.2f, Unit.Centimetre).Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(3); // Task Name
+                    columns.ConstantColumn(2, Unit.Centimetre); // Status
+                    columns.ConstantColumn(2, Unit.Centimetre); // Progress
+                    columns.ConstantColumn(2.5f, Unit.Centimetre); // Start Date
+                    columns.ConstantColumn(2.5f, Unit.Centimetre); // End Date
+                    columns.RelativeColumn(2); // Assignee
+                });
+
+                // Header
+                table.Header(header =>
+                {
+                    header.Cell().Element(HeaderStyle).Text("Task Name").SemiBold();
+                    header.Cell().Element(HeaderStyle).Text("Status").SemiBold();
+                    header.Cell().Element(HeaderStyle).Text("Progress").SemiBold();
+                    header.Cell().Element(HeaderStyle).Text("Start Date").SemiBold();
+                    header.Cell().Element(HeaderStyle).Text("End Date").SemiBold();
+                    header.Cell().Element(HeaderStyle).Text("Assignee").SemiBold();
+                });
+
+                // Rows
+                foreach (var task in tasks.Take(20)) // Limit to prevent overcrowding
+                {
+                    table.Cell().Element(CellStyle).Text(task.Name);
+                    table.Cell().Element(CellStyle).Text(task.Status.ToString());
+                    table.Cell().Element(CellStyle).Text(task.ProgressDisplay);
+                    table.Cell().Element(CellStyle).Text(task.StartDate.ToString("MM/dd"));
+                    table.Cell().Element(CellStyle).Text(task.EndDate.ToString("MM/dd"));
+                    table.Cell().Element(CellStyle).Text(task.Assignee);
+                }
+            });
+        });
+
+        static IContainer HeaderStyle(IContainer container)
+        {
+            return container.DefaultTextStyle(x => x.SemiBold())
+                          .PaddingVertical(5)
+                          .BorderBottom(1)
+                          .BorderColor(Colors.Black)
+                          .Background(Colors.Grey.Lighten3);
+        }
+
+        static IContainer CellStyle(IContainer container)
+        {
+            return container.BorderBottom(1)
+                          .BorderColor(Colors.Grey.Lighten2)
+                          .PaddingVertical(5);
+        }
     }
 
-    private string GetTimelineStyles()
+    private void TimelineSection(IContainer container, Project project, IEnumerable<GanttTask> tasks, DateTime startDate, DateTime endDate)
     {
-        return @"
-<style>
-.timeline-container { 
-    width: 100%; 
-    margin: 20px 0; 
-}
-.timeline-row { 
-    display: flex; 
-    align-items: center; 
-    margin-bottom: 15px; 
-    height: 30px; 
-}
-.task-label { 
-    width: 200px; 
-    font-size: 12px; 
-    padding-right: 10px; 
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-}
-.timeline-bar-container { 
-    flex: 1; 
-    height: 20px; 
-    background-color: #f8f9fa; 
-    position: relative; 
-    border: 1px solid #dee2e6; 
-}
-.timeline-bar { 
-    height: 100%; 
-    position: absolute; 
-    top: 0; 
-}
-.timeline-completed { background-color: #28a745; }
-.timeline-inprogress { background-color: #ffc107; }
-.timeline-notstarted { background-color: #6c757d; }
-.timeline-onhold { background-color: #17a2b8; }
-.timeline-cancelled { background-color: #dc3545; }
-</style>";
+        // Simplified timeline representation
+        container.Column(column =>
+        {
+            column.Item().Text("Timeline Overview").FontSize(14).SemiBold();
+            
+            var sortedTasks = tasks.OrderBy(t => t.StartDate).ToList();
+            
+            foreach (var task in sortedTasks.Take(15)) // Limit for space
+            {
+                column.Item().PaddingTop(0.1f, Unit.Centimetre).Row(row =>
+                {
+                    row.ConstantItem(3, Unit.Centimetre).Text(task.Name).FontSize(9);
+                    
+                    // Simple timeline bar representation
+                    row.RelativeItem().Canvas((canvas, size) =>
+                    {
+                        var totalDays = (endDate - startDate).TotalDays;
+                        var taskStart = (task.StartDate - startDate).TotalDays;
+                        var taskDuration = (task.EndDate - task.StartDate).TotalDays;
+                        
+                        if (totalDays > 0)
+                        {
+                            var startPercent = taskStart / totalDays;
+                            var widthPercent = taskDuration / totalDays;
+                            
+                            var barX = (float)(startPercent * size.Width);
+                            var barWidth = (float)(widthPercent * size.Width);
+                            
+                            canvas.DrawRectangle(new QuestPDF.Infrastructure.Point(barX, 2), 
+                                               new QuestPDF.Infrastructure.Size(Math.Max(barWidth, 5), 10), 
+                                               GetTaskColor(task.Status));
+                        }
+                    });
+                });
+            }
+        });
     }
 
-    #endregion
+    private void DetailedTasksSection(IContainer container, IEnumerable<GanttTask> tasks)
+    {
+        container.Column(column =>
+        {
+            foreach (var task in tasks)
+            {
+                column.Item().PaddingBottom(0.5f, Unit.Centimetre).Border(1)
+                    .BorderColor(Colors.Grey.Lighten1).Padding(0.3f, Unit.Centimetre)
+                    .Column(taskColumn =>
+                    {
+                        taskColumn.Item().Text(task.Name).FontSize(12).SemiBold();
+                        taskColumn.Item().Text($"Description: {task.Description}").FontSize(10);
+                        taskColumn.Item().Text($"Status: {task.Status}, Priority: {task.Priority}").FontSize(10);
+                        taskColumn.Item().Text($"Duration: {task.DurationDisplay}, Progress: {task.ProgressDisplay}").FontSize(10);
+                        taskColumn.Item().Text($"Assignee: {task.Assignee}").FontSize(10);
+                    });
+            }
+        });
+    }
 
-    #region Helper Methods
+    private void ProjectSummarySection(IContainer container, Project project, ProjectStatistics statistics)
+    {
+        container.Column(column =>
+        {
+            column.Item().Text("Project Statistics").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken1);
+            
+            column.Item().PaddingTop(0.2f, Unit.Centimetre).Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(4, Unit.Centimetre);
+                    columns.RelativeColumn();
+                });
+
+                table.Cell().Element(CellStyle).Text("Total Tasks:").SemiBold();
+                table.Cell().Element(CellStyle).Text(statistics.TotalTasks.ToString());
+
+                table.Cell().Element(CellStyle).Text("Completed Tasks:").SemiBold();
+                table.Cell().Element(CellStyle).Text(statistics.CompletedTasks.ToString());
+
+                table.Cell().Element(CellStyle).Text("In Progress Tasks:").SemiBold();
+                table.Cell().Element(CellStyle).Text(statistics.InProgressTasks.ToString());
+
+                table.Cell().Element(CellStyle).Text("Overdue Tasks:").SemiBold();
+                table.Cell().Element(CellStyle).Text(statistics.OverdueTasks.ToString());
+
+                table.Cell().Element(CellStyle).Text("Progress:").SemiBold();
+                table.Cell().Element(CellStyle).Text($"{statistics.ProgressPercentage:F1}%");
+
+                table.Cell().Element(CellStyle).Text("Estimated Hours:").SemiBold();
+                table.Cell().Element(CellStyle).Text($"{statistics.TotalEstimatedHours:F1}");
+
+                table.Cell().Element(CellStyle).Text("Actual Hours:").SemiBold();
+                table.Cell().Element(CellStyle).Text($"{statistics.TotalActualHours:F1}");
+            });
+        });
+
+        static IContainer CellStyle(IContainer container)
+        {
+            return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
+        }
+    }
+
+    private string GetTaskColor(TouchGanttChart.Models.TaskStatus status)
+    {
+        return status switch
+        {
+            TouchGanttChart.Models.TaskStatus.NotStarted => Colors.Grey.Medium,
+            TouchGanttChart.Models.TaskStatus.InProgress => Colors.Blue.Medium,
+            TouchGanttChart.Models.TaskStatus.Completed => Colors.Green.Medium,
+            TouchGanttChart.Models.TaskStatus.OnHold => Colors.Orange.Medium,
+            TouchGanttChart.Models.TaskStatus.Cancelled => Colors.Red.Medium,
+            _ => Colors.Grey.Medium
+        };
+    }
 
     private void EnsureExportDirectoryExists()
     {
@@ -601,18 +552,6 @@ body {
     {
         var invalidChars = Path.GetInvalidFileNameChars();
         return string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
-    }
-
-    private static string EscapeHtml(string text)
-    {
-        if (string.IsNullOrEmpty(text))
-            return string.Empty;
-
-        return text.Replace("&", "&amp;")
-                   .Replace("<", "&lt;")
-                   .Replace(">", "&gt;")
-                   .Replace("\"", "&quot;")
-                   .Replace("'", "&#39;");
     }
 
     #endregion

@@ -13,12 +13,11 @@ namespace TouchGanttChart.ViewModels;
 /// ViewModel for the TaskEditDialog, handling task creation and editing
 /// with touch-optimized interface and validation.
 /// </summary>
-public partial class TaskEditDialogViewModel : ViewModelBase
+public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
 {
     private readonly IDataService _dataService;
     private readonly ILogger<TaskEditDialogViewModel> _logger;
     private GanttTask _originalTask;
-    private bool _isNewTask;
 
     [ObservableProperty]
     private GanttTask _task = new();
@@ -43,8 +42,8 @@ public partial class TaskEditDialogViewModel : ViewModelBase
     /// <summary>
     /// Available task status options
     /// </summary>
-    public static readonly ReadOnlyCollection<TaskStatus> StatusOptions = new(
-        Enum.GetValues<TaskStatus>().ToList());
+    public static readonly ReadOnlyCollection<TouchGanttChart.Models.TaskStatus> StatusOptions = new(
+        Enum.GetValues<TouchGanttChart.Models.TaskStatus>().ToList());
 
     /// <summary>
     /// Available task priority options
@@ -58,7 +57,7 @@ public partial class TaskEditDialogViewModel : ViewModelBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         
         _originalTask = new GanttTask();
-        _isNewTask = true;
+        IsNewTask = true;
         
         // Set default values for new task
         Task.StartDate = DateTime.Today;
@@ -66,8 +65,7 @@ public partial class TaskEditDialogViewModel : ViewModelBase
         Task.Status = TouchGanttChart.Models.TaskStatus.NotStarted;
         Task.Priority = TaskPriority.Normal;
         
-        // Subscribe to property changes for validation
-        Task.PropertyChanged += OnTaskPropertyChanged;
+        // Note: Property change validation will be handled through explicit calls
         
         UpdateWindowState();
         ValidateTask();
@@ -82,7 +80,7 @@ public partial class TaskEditDialogViewModel : ViewModelBase
         if (task == null) throw new ArgumentNullException(nameof(task));
         
         _originalTask = task;
-        _isNewTask = false;
+        IsNewTask = false;
         
         // Create a copy to edit
         Task = new GanttTask
@@ -118,7 +116,7 @@ public partial class TaskEditDialogViewModel : ViewModelBase
     public void SetNewTask(int projectId)
     {
         _originalTask = new GanttTask();
-        _isNewTask = true;
+        IsNewTask = true;
         
         Task = new GanttTask
         {
@@ -156,7 +154,7 @@ public partial class TaskEditDialogViewModel : ViewModelBase
 
             Task.LastModifiedDate = DateTime.UtcNow;
 
-            if (_isNewTask)
+            if (IsNewTask)
             {
                 Task.CreatedDate = DateTime.UtcNow;
                 var createdTask = await _dataService.CreateTaskAsync(Task);
@@ -200,7 +198,7 @@ public partial class TaskEditDialogViewModel : ViewModelBase
     /// </summary>
     private void UpdateWindowState()
     {
-        if (_isNewTask)
+        if (IsNewTask)
         {
             WindowTitle = "Create New Task";
             SaveButtonText = "Create Task";
@@ -267,14 +265,15 @@ public partial class TaskEditDialogViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Handles property changes on the task to trigger validation
+    /// Triggers validation and updates UI when task properties change
+    /// Call this method after modifying task properties
     /// </summary>
-    private void OnTaskPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    public void OnTaskChanged()
     {
         ValidateTask();
         
         // Update window title if name changes
-        if (e.PropertyName == nameof(GanttTask.Name) && !_isNewTask)
+        if (!IsNewTask)
         {
             WindowTitle = $"Edit Task: {Task.Name}";
         }
@@ -283,16 +282,8 @@ public partial class TaskEditDialogViewModel : ViewModelBase
     /// <summary>
     /// Cleanup when the view model is disposed
     /// </summary>
-    protected override void Dispose(bool disposing)
+    public void Dispose()
     {
-        if (disposing)
-        {
-            if (Task != null)
-            {
-                Task.PropertyChanged -= OnTaskPropertyChanged;
-            }
-        }
-        
-        base.Dispose(disposing);
+        // No cleanup needed for this implementation
     }
 }

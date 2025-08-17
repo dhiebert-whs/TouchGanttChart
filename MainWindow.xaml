@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TouchGanttChart"
+        xmlns:controls="clr-namespace:TouchGanttChart.Controls"
         mc:Ignorable="d"
         Title="{Binding Title}" 
         Height="800" 
@@ -74,36 +75,15 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Project/Task tree view -->
-            <Border Grid.Column="0" 
-                    Background="White"
-                    BorderBrush="#dee2e6"
-                    BorderThickness="0,0,1,0">
-                
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Text="Projects &amp; Tasks" 
-                               FontSize="16" 
-                               FontWeight="SemiBold"
-                               Margin="16,12"/>
-
-                    <TreeView Grid.Row="1" 
-                              ItemsSource="{Binding Projects}"
-                              Margin="8">
-                        <TreeView.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" 
-                                           FontSize="14"
-                                           Padding="4"/>
-                            </DataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
-                </Grid>
-            </Border>
+            <!-- Task List Panel -->
+            <controls:TaskListPanel Grid.Column="0"
+                                    DataContext="{Binding}"
+                                    SelectedTask="{Binding SelectedTask, Mode=TwoWay}"
+                                    TaskSelected="OnTaskSelected"
+                                    TaskEditRequested="OnTaskEditRequested"
+                                    Background="White"
+                                    BorderBrush="#dee2e6"
+                                    BorderThickness="0,0,1,0"/>
 
             <!-- Splitter -->
             <GridSplitter Grid.Column="1" 
@@ -120,20 +100,16 @@
                               VerticalScrollBarVisibility="Auto"
                               IsManipulationEnabled="True">
                     
-                    <!-- Placeholder for Gantt chart control -->
-                    <Grid x:Name="GanttCanvas" 
-                          Background="White"
-                          IsManipulationEnabled="True"
-                          MinHeight="400">
-                        
-                        <TextBlock Text="Gantt Chart Canvas - To be implemented in Phase 2" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center"
-                                   FontSize="16" 
-                                   FontStyle="Italic"
-                                   Foreground="#6c757d"/>
-                        
-                    </Grid>
+                    <!-- Gantt Timeline Canvas -->
+                    <controls:GanttTimelineCanvas x:Name="GanttCanvas"
+                                                  Tasks="{Binding Tasks}"
+                                                  TimelineStart="{Binding TimelineStart}"
+                                                  TimelineEnd="{Binding TimelineEnd}"
+                                                  ZoomLevel="{Binding ZoomLevel, Mode=TwoWay}"
+                                                  SelectedTask="{Binding SelectedTask, Mode=TwoWay}"
+                                                  Background="White"
+                                                  MinHeight="400"
+                                                  MinWidth="800"/>
                     
                 </ScrollViewer>
             </Border>

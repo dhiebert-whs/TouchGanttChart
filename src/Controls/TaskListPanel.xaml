@@ -1,0 +1,292 @@
+﻿<UserControl x:Class="TouchGanttChart.Controls.TaskListPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TouchGanttChart.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="300">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        
+        <!-- Touch-optimized task item style -->
+        <Style x:Key="TaskItemStyle" TargetType="Border">
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#dee2e6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#f8f9fa"/>
+                    <Setter Property="BorderBrush" Value="#adb5bd"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="#e3f2fd"/>
+                    <Setter Property="BorderBrush" Value="#2196f3"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Status indicator style -->
+        <Style x:Key="StatusIndicatorStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="NotStarted">
+                    <Setter Property="Fill" Value="#6c757d"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="InProgress">
+                    <Setter Property="Fill" Value="#007bff"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Completed">
+                    <Setter Property="Fill" Value="#28a745"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="OnHold">
+                    <Setter Property="Fill" Value="#ffc107"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                    <Setter Property="Fill" Value="#dc3545"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Progress bar style -->
+        <Style x:Key="TaskProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+            <Setter Property="Foreground" Value="#007bff"/>
+            <Setter Property="Background" Value="#e9ecef"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="#f8f9fa" 
+                BorderBrush="#dee2e6" 
+                BorderThickness="0,0,0,1"
+                Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           Text="Tasks" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           Foreground="#212529"
+                           VerticalAlignment="Center"/>
+                
+                <Button Grid.Column="1"
+                        Content="＋"
+                        Command="{Binding AddTaskCommand}"
+                        MinWidth="32" MinHeight="32"
+                        FontSize="16" FontWeight="Bold"
+                        Background="#007bff" Foreground="White"
+                        BorderThickness="0"
+                        Padding="0"
+                        ToolTip="Add New Task"/>
+            </Grid>
+        </Border>
+
+        <!-- Filter/Search Bar -->
+        <Border Grid.Row="1" 
+                Background="White"
+                BorderBrush="#dee2e6"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBox Grid.Column="0"
+                         Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}"
+                         MinHeight="36"
+                         Padding="8,4"
+                         FontSize="14"
+                         BorderBrush="#ced4da"
+                         Background="White">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="">
+                                    <Setter Property="Background">
+                                        <Setter.Value>
+                                            <VisualBrush AlignmentX="Left" AlignmentY="Center" Stretch="None">
+                                                <VisualBrush.Visual>
+                                                    <TextBlock Text="Search tasks..." 
+                                                              Foreground="#6c757d" 
+                                                              FontStyle="Italic"
+                                                              Margin="8,0,0,0"/>
+                                                </VisualBrush.Visual>
+                                            </VisualBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                
+                <Button Grid.Column="1"
+                        Content="🔍"
+                        MinWidth="36" MinHeight="36"
+                        Margin="4,0,0,0"
+                        FontSize="14"
+                        Background="#f8f9fa"
+                        BorderBrush="#ced4da"
+                        ToolTip="Search"/>
+            </Grid>
+        </Border>
+
+        <!-- Task List -->
+        <ScrollViewer Grid.Row="2" 
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      IsManipulationEnabled="True">
+            
+            <ItemsControl ItemsSource="{Binding Tasks}"
+                          Margin="8">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource TaskItemStyle}"
+                                MouseLeftButtonDown="OnTaskItemClick"
+                                TouchDown="OnTaskItemTouch"
+                                Tag="{Binding}">
+                            
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Task Name and Status -->
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Ellipse Grid.Column="0" 
+                                             Style="{StaticResource StatusIndicatorStyle}"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Name}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#212529"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center"/>
+
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Priority}"
+                                               FontSize="10"
+                                               FontWeight="SemiBold"
+                                               Padding="4,2"
+                                               Background="#ffc107"
+                                               Foreground="#212529"
+                                               VerticalAlignment="Top"
+                                               HorizontalAlignment="Right"
+                                               Visibility="{Binding IsPriorityVisible, Converter={StaticResource BoolToVisConverter}}"/>
+                                </Grid>
+
+                                <!-- Task Details -->
+                                <Grid Grid.Row="1" Margin="20,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                                        <TextBlock Text="{Binding Assignee, StringFormat='Assigned to: {0}'}"
+                                                   FontSize="11"
+                                                   Foreground="#6c757d"
+                                                   Visibility="{Binding HasAssignee, Converter={StaticResource BoolToVisConverter}}"/>
+                                        
+                                        <TextBlock Text="{Binding DurationDisplay}"
+                                                   FontSize="11"
+                                                   Foreground="#6c757d"/>
+                                        
+                                        <TextBlock Text="{Binding StartDate, StringFormat='Start: {0:MMM dd}'}"
+                                                   FontSize="11"
+                                                   Foreground="#6c757d"/>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ProgressDisplay}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#007bff"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Progress Bar -->
+                                <ProgressBar Grid.Row="2"
+                                             Style="{StaticResource TaskProgressBarStyle}"
+                                             Value="{Binding Progress}"
+                                             Maximum="100"
+                                             Margin="20,4,0,0"
+                                             Visibility="{Binding HasProgress, Converter={StaticResource BoolToVisConverter}}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Empty State -->
+        <StackPanel Grid.Row="2" 
+                    VerticalAlignment="Center" 
+                    HorizontalAlignment="Center"
+                    Visibility="{Binding HasNoTasks, Converter={StaticResource BoolToVisConverter}}"
+                    Margin="20">
+            
+            <TextBlock Text="📋" 
+                       FontSize="48" 
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,16"/>
+            
+            <TextBlock Text="No tasks yet" 
+                       FontSize="18" 
+                       FontWeight="SemiBold"
+                       Foreground="#6c757d"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,8"/>
+            
+            <TextBlock Text="Create your first task to get started" 
+                       FontSize="14"
+                       Foreground="#adb5bd"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       Margin="0,0,0,16"/>
+            
+            <Button Content="Add Task"
+                    Command="{Binding AddTaskCommand}"
+                    MinHeight="44" MinWidth="120"
+                    FontSize="14" FontWeight="SemiBold"
+                    Background="#007bff" Foreground="White"
+                    BorderThickness="0"
+                    Padding="16,12"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -168,4 +168,19 @@ public class GanttTask
             };
         }
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the priority should be visible (non-Normal priority).
+    /// </summary>
+    public bool IsPriorityVisible => Priority != TaskPriority.Normal;
+
+    /// <summary>
+    /// Gets a value indicating whether the task has an assignee.
+    /// </summary>
+    public bool HasAssignee => !string.IsNullOrWhiteSpace(Assignee);
+
+    /// <summary>
+    /// Gets a value indicating whether the task has progress greater than 0.
+    /// </summary>
+    public bool HasProgress => Progress > 0;
 }

@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using System.Windows;
+using TouchGanttChart.Controls;
 using TouchGanttChart.ViewModels;
 
 namespace TouchGanttChart;
@@ -62,6 +64,37 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during MainWindow cleanup");
+        }
+    }
+
+    /// <summary>
+    /// Handles task selection events from the task list panel
+    /// </summary>
+    private void OnTaskSelected(object sender, TaskSelectedEventArgs e)
+    {
+        _viewModel.SelectedTask = e.Task;
+        _logger.LogDebug("Task selected: {TaskName}", e.Task.Name);
+    }
+
+    /// <summary>
+    /// Handles task edit requests from the task list panel
+    /// </summary>
+    private async void OnTaskEditRequested(object sender, TaskSelectedEventArgs e)
+    {
+        _logger.LogDebug("Task edit requested: {TaskName}", e.Task.Name);
+        _viewModel.SelectedTask = e.Task;
+        
+        // Execute the edit task command
+        if (_viewModel.EditTaskCommand?.CanExecute(null) == true)
+        {
+            if (_viewModel.EditTaskCommand is IAsyncRelayCommand asyncCommand)
+            {
+                await asyncCommand.ExecuteAsync(null);
+            }
+            else
+            {
+                _viewModel.EditTaskCommand.Execute(null);
+            }
         }
     }
 }

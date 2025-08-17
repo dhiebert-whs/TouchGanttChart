@@ -123,6 +123,7 @@ public partial class App : Application
 
                 // Register ViewModels
                 services.AddSingleton<MainWindowViewModel>();
+                services.AddTransient<TaskEditDialogViewModel>();
 
                 // Register Views
                 services.AddSingleton<MainWindow>();

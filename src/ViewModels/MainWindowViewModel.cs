@@ -1,11 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 using TouchGanttChart.Models;
 using TouchGanttChart.Services.Interfaces;
 using TouchGanttChart.ViewModels.Base;
+using TouchGanttChart.Views;
 
 namespace TouchGanttChart.ViewModels;
 
@@ -17,20 +20,26 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IDataService _dataService;
     private readonly IPdfExportService _pdfExportService;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<MainWindowViewModel> _logger;
 
     /// <summary>
     /// Initializes a new instance of the MainWindowViewModel class.
     /// </summary>
     /// <param name="dataService">The data service.</param>
     /// <param name="pdfExportService">The PDF export service.</param>
+    /// <param name="serviceProvider">The service provider for dependency injection.</param>
     /// <param name="logger">The logger instance.</param>
     public MainWindowViewModel(
         IDataService dataService,
         IPdfExportService pdfExportService,
+        IServiceProvider serviceProvider,
         ILogger<MainWindowViewModel> logger) : base(logger)
     {
         _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
         _pdfExportService = pdfExportService ?? throw new ArgumentNullException(nameof(pdfExportService));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _logger = logger;
         
         Title = "Touch Gantt Chart";
         Projects = new ObservableCollection<Project>();
@@ -271,6 +280,7 @@ public partial class MainWindowViewModel : ViewModelBase
         else
         {
             Tasks.Clear();
+            OnPropertyChanged(nameof(HasNoTasks));
         }
     }
 
@@ -331,6 +341,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         
         ApplyFilters();
+        OnPropertyChanged(nameof(HasNoTasks));
         SetStatus($"Loaded {Tasks.Count} tasks");
     }
 
@@ -374,9 +385,24 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (SelectedProject == null) return;
         
-        // TODO: Show task creation dialog
-        await Task.CompletedTask;
-        SetStatus("Add task functionality will be implemented");
+        try
+        {
+            var mainWindow = Application.Current.MainWindow;
+            var dialog = TaskEditDialog.Create(_serviceProvider, null, SelectedProject.Id, mainWindow);
+            
+            var result = dialog.ShowDialog();
+            
+            if (result == true)
+            {
+                await LoadTasksForProjectAsync(SelectedProject.Id);
+                SetStatus("New task created successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening task creation dialog");
+            SetStatus("Failed to open task creation dialog");
+        }
     }
 
     /// <summary>
@@ -386,9 +412,24 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (SelectedTask == null) return;
         
-        // TODO: Show task editing dialog
-        await Task.CompletedTask;
-        SetStatus("Edit task functionality will be implemented");
+        try
+        {
+            var mainWindow = Application.Current.MainWindow;
+            var dialog = TaskEditDialog.Create(_serviceProvider, SelectedTask, null, mainWindow);
+            
+            var result = dialog.ShowDialog();
+            
+            if (result == true)
+            {
+                await LoadTasksForProjectAsync(SelectedProject?.Id ?? SelectedTask.ProjectId);
+                SetStatus("Task updated successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening task edit dialog");
+            SetStatus("Failed to open task edit dialog");
+        }
     }
 
     /// <summary>
@@ -521,4 +562,9 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets the available task priority options for filtering.
     /// </summary>
     public static IReadOnlyList<TaskPriority> PriorityFilterOptions { get; } = Enum.GetValues<TaskPriority>();
+
+    /// <summary>
+    /// Gets a value indicating whether there are no tasks to display.
+    /// </summary>
+    public bool HasNoTasks => Tasks.Count == 0;
 }
