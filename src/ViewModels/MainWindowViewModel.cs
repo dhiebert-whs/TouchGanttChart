@@ -150,6 +150,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private IRelayCommand? _openProjectCommand;
 
     /// <summary>
+    /// Gets the command to close the current project.
+    /// </summary>
+    [ObservableProperty]
+    private IRelayCommand? _closeProjectCommand;
+
+    /// <summary>
     /// Gets the command to save the current project.
     /// </summary>
     [ObservableProperty]
@@ -228,6 +234,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         NewProjectCommand = new AsyncRelayCommand(CreateNewProjectAsync);
         OpenProjectCommand = new AsyncRelayCommand(OpenProjectAsync);
+        CloseProjectCommand = new AsyncRelayCommand(CloseProjectAsync, () => SelectedProject != null);
         SaveCommand = new AsyncRelayCommand(SaveProjectAsync, () => CanSave);
         AddTaskCommand = new AsyncRelayCommand(AddTaskAsync, () => SelectedProject != null);
         EditTaskCommand = new AsyncRelayCommand(EditTaskAsync, () => SelectedTask != null);
@@ -395,9 +402,68 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private async Task OpenProjectAsync()
     {
-        // TODO: Show project selection dialog
+        try
+        {
+            var mainWindow = Application.Current.MainWindow;
+            var dialog = ProjectSelectionDialog.Create(_serviceProvider, mainWindow);
+            
+            var result = dialog.ShowDialog();
+            
+            if (result == true && dialog.SelectedProject != null)
+            {
+                // Set the selected project
+                SelectedProject = dialog.SelectedProject;
+                
+                // Load tasks for the selected project
+                await LoadTasksForProjectAsync(dialog.SelectedProject.Id);
+                
+                SetStatus($"Opened project '{dialog.SelectedProject.Name}'");
+            }
+            else if (result == null)
+            {
+                // User clicked "New Project" - trigger the new project command
+                await CreateNewProjectAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening project selection dialog");
+            SetStatus("Failed to open project selection dialog");
+        }
+    }
+
+    /// <summary>
+    /// Closes the current project.
+    /// </summary>
+    private async Task CloseProjectAsync()
+    {
+        if (SelectedProject == null) return;
+
+        try
+        {
+            // Clear the current project and tasks
+            SelectedProject = null;
+            SelectedTask = null;
+            Tasks.Clear();
+            
+            // Update the UI
+            SetStatus("Project closed");
+            
+            // Refresh commands to update their CanExecute status
+            CloseProjectCommand?.NotifyCanExecuteChanged();
+            SaveCommand?.NotifyCanExecuteChanged();
+            AddTaskCommand?.NotifyCanExecuteChanged();
+            EditTaskCommand?.NotifyCanExecuteChanged();
+            DeleteTaskCommand?.NotifyCanExecuteChanged();
+            ExportPdfCommand?.NotifyCanExecuteChanged();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error closing project");
+            SetStatus("Failed to close project");
+        }
+        
         await Task.CompletedTask;
-        SetStatus("Open project functionality will be implemented");
     }
 
     /// <summary>

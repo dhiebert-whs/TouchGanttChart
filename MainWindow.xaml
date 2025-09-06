@@ -48,6 +48,12 @@
                     Margin="8" Padding="16,12"
                     FontSize="14" FontWeight="SemiBold"/>
             
+            <Button Content="Close Project" 
+                    Command="{Binding CloseProjectCommand}"
+                    MinHeight="44" MinWidth="120"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"/>
+            
             <Button Content="Save" 
                     Command="{Binding SaveCommand}"
                     MinHeight="44" MinWidth="80"

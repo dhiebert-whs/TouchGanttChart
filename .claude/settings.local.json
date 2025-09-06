@@ -8,7 +8,9 @@
       "Bash(taskkill:*)",
       "Bash(dotnet clean:*)",
       "Bash(dotnet ef migrations:*)",
-      "Bash(dotnet tool install:*)"
+      "Bash(dotnet tool install:*)",
+      "Bash(dotnet ef database:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": []
   }

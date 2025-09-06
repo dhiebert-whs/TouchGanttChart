@@ -127,6 +127,7 @@ public partial class App : Application
                 services.AddTransient<TaskEditDialogViewModel>();
                 services.AddTransient<TaskDependencyDialogViewModel>();
                 services.AddTransient<ProjectTemplateSelectionViewModel>();
+                services.AddTransient<ProjectSelectionViewModel>();
 
                 // Register Views
                 services.AddSingleton<MainWindow>();

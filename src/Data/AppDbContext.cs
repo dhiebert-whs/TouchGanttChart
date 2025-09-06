@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TouchGanttChart.Models;
+using TaskStatus = TouchGanttChart.Models.TaskStatus;
 
 namespace TouchGanttChart.Data;
 
@@ -321,6 +322,385 @@ public class AppDbContext : DbContext
 
             Tasks.AddRange(tasks);
             await SaveChangesAsync();
+
+            // Add FRC Robot Build Project with Hierarchical Tasks and Dependencies
+            var frcProject = new Project
+            {
+                Name = "FRC Robot Build - Team 1234",
+                Description = "FIRST Robotics Competition robot design and build for the 2025 season with swerve drive and 2-stage elevator",
+                StartDate = new DateTime(2025, 10, 1),
+                EndDate = new DateTime(2025, 11, 12),
+                ProjectManager = "Chief Engineer",
+                Status = TaskStatus.InProgress,
+                Priority = TaskPriority.High,
+                Budget = 15000m,
+                ActualCost = 0m,
+                Color = "#e74c3c"
+            };
+
+            Projects.Add(frcProject);
+            await SaveChangesAsync();
+
+            // Create FRC Tasks with Hierarchical Structure and Dependencies
+            var frcTasks = new List<GanttTask>();
+
+            // PRIMARY MECHANICAL TASKS
+            var buildDrivetrain = new GanttTask
+            {
+                Name = "Build Drivetrain",
+                Description = "Design and build robot drivetrain system",
+                StartDate = new DateTime(2025, 10, 6),
+                EndDate = new DateTime(2025, 10, 18),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Mechanical Lead",
+                Category = "Mechanical",
+                EstimatedHours = 60
+            };
+
+            var buildIntake = new GanttTask
+            {
+                Name = "Build Intake",
+                Description = "Design and build game piece intake mechanism",
+                StartDate = new DateTime(2025, 10, 8),
+                EndDate = new DateTime(2025, 10, 18),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 50
+            };
+
+            var buildElevator = new GanttTask
+            {
+                Name = "Build 2-Stage Elevator",
+                Description = "Design and build two-stage elevator system",
+                StartDate = new DateTime(2025, 10, 11),
+                EndDate = new DateTime(2025, 10, 25),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 70
+            };
+
+            // Add primary tasks first and save to get IDs
+            Tasks.AddRange(new[] { buildDrivetrain, buildIntake, buildElevator });
+            await SaveChangesAsync();
+
+            // DRIVETRAIN SUBTASKS (now with valid parent IDs)
+            var assembleFrame = new GanttTask
+            {
+                Name = "Assemble Frame",
+                Description = "Build main robot frame structure",
+                StartDate = new DateTime(2025, 10, 6),
+                EndDate = new DateTime(2025, 10, 10),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = buildDrivetrain.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 24
+            };
+
+            var assembleSwerve1 = new GanttTask
+            {
+                Name = "Assemble Swerve Module 1",
+                Description = "Build first swerve drive module",
+                StartDate = new DateTime(2025, 10, 6),
+                EndDate = new DateTime(2025, 10, 9),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = buildDrivetrain.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 8
+            };
+
+            var assembleSwerve2 = new GanttTask
+            {
+                Name = "Assemble Swerve Module 2",
+                Description = "Build second swerve drive module",
+                StartDate = new DateTime(2025, 10, 6),
+                EndDate = new DateTime(2025, 10, 9),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = buildDrivetrain.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 8
+            };
+
+            var assembleSwerve3 = new GanttTask
+            {
+                Name = "Assemble Swerve Module 3",
+                Description = "Build third swerve drive module",
+                StartDate = new DateTime(2025, 10, 9),
+                EndDate = new DateTime(2025, 10, 12),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = buildDrivetrain.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 8
+            };
+
+            var assembleSwerve4 = new GanttTask
+            {
+                Name = "Assemble Swerve Module 4",
+                Description = "Build fourth swerve drive module",
+                StartDate = new DateTime(2025, 10, 9),
+                EndDate = new DateTime(2025, 10, 12),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = buildDrivetrain.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 8
+            };
+
+            var mountSwerveModules = new GanttTask
+            {
+                Name = "Mount Swerve Modules on Frame",
+                Description = "Install all four swerve modules onto the frame",
+                StartDate = new DateTime(2025, 10, 13),
+                EndDate = new DateTime(2025, 10, 18),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = buildDrivetrain.Id,
+                Assignee = "Mechanical Team",
+                Category = "Mechanical",
+                EstimatedHours = 16
+            };
+
+            // Add drivetrain subtasks
+            Tasks.AddRange(new[] { assembleFrame, assembleSwerve1, assembleSwerve2, assembleSwerve3, assembleSwerve4, mountSwerveModules });
+            await SaveChangesAsync();
+
+            // PRIMARY ELECTRICAL TASKS
+            var mountRoboRio = new GanttTask
+            {
+                Name = "Mount RoboRio",
+                Description = "Install and secure RoboRio control system",
+                StartDate = new DateTime(2025, 10, 13),
+                EndDate = new DateTime(2025, 10, 15),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Electrical Lead",
+                Category = "Electrical",
+                EstimatedHours = 8
+            };
+
+            var mountSparkMaxes = new GanttTask
+            {
+                Name = "Mount Drivetrain SparkMaxes",
+                Description = "Install motor controllers for drivetrain",
+                StartDate = new DateTime(2025, 10, 20),
+                EndDate = new DateTime(2025, 10, 23),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Electrical Team",
+                Category = "Electrical",
+                EstimatedHours = 12
+            };
+
+            var connectSwerveModules = new GanttTask
+            {
+                Name = "Connect Swerve Modules to SparkMaxes",
+                Description = "Wire swerve modules to drivetrain controllers",
+                StartDate = new DateTime(2025, 10, 24),
+                EndDate = new DateTime(2025, 10, 28),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Electrical Team",
+                Category = "Electrical",
+                EstimatedHours = 16
+            };
+
+            // Add electrical tasks
+            Tasks.AddRange(new[] { mountRoboRio, mountSparkMaxes, connectSwerveModules });
+            await SaveChangesAsync();
+
+            // PRIMARY PROGRAMMING TASKS
+            var drivetrainProgramming = new GanttTask
+            {
+                Name = "Drivetrain Programming",
+                Description = "Program swerve drive control system",
+                StartDate = new DateTime(2025, 10, 18),
+                EndDate = new DateTime(2025, 10, 26),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Programming Lead",
+                Category = "Software",
+                EstimatedHours = 32
+            };
+
+            var autonomousProgramming = new GanttTask
+            {
+                Name = "Autonomous Programming",
+                Description = "Develop autonomous routines and path planning",
+                StartDate = new DateTime(2025, 10, 21),
+                EndDate = new DateTime(2025, 10, 31),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.High,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Programming Team",
+                Category = "Software",
+                EstimatedHours = 40
+            };
+
+            var visionProgramming = new GanttTask
+            {
+                Name = "Vision System Programming",
+                Description = "Implement computer vision for target tracking",
+                StartDate = new DateTime(2025, 10, 24),
+                EndDate = new DateTime(2025, 11, 5),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.Normal,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "Programming Team",
+                Category = "Software",
+                EstimatedHours = 48
+            };
+
+            // Add programming tasks
+            Tasks.AddRange(new[] { drivetrainProgramming, autonomousProgramming, visionProgramming });
+            await SaveChangesAsync();
+
+            // PUBLIC RELATIONS TASKS
+            var socialMediaCampaign = new GanttTask
+            {
+                Name = "Social Media Campaign",
+                Description = "Document build progress and engage community",
+                StartDate = new DateTime(2025, 10, 3),
+                EndDate = new DateTime(2025, 11, 7),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.Normal,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "PR Team",
+                Category = "Marketing",
+                EstimatedHours = 20
+            };
+
+            var sponsorOutreach = new GanttTask
+            {
+                Name = "Sponsor Outreach",
+                Description = "Engage with sponsors and document robot progress",
+                StartDate = new DateTime(2025, 10, 6),
+                EndDate = new DateTime(2025, 11, 5),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.Normal,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                Assignee = "PR Lead",
+                Category = "Marketing",
+                EstimatedHours = 15
+            };
+
+            // Add primary PR tasks first and save to get IDs
+            Tasks.AddRange(new[] { socialMediaCampaign, sponsorOutreach });
+            await SaveChangesAsync();
+
+            // PR SUBTASKS (now with valid parent IDs)
+            var createContentPlan = new GanttTask
+            {
+                Name = "Create Content Plan",
+                Description = "Develop social media content strategy and calendar",
+                StartDate = new DateTime(2025, 10, 3),
+                EndDate = new DateTime(2025, 10, 5),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.Normal,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = socialMediaCampaign.Id,
+                Assignee = "PR Team",
+                Category = "Marketing",
+                EstimatedHours = 6
+            };
+
+            var dailyUpdates = new GanttTask
+            {
+                Name = "Daily Build Updates",
+                Description = "Post daily progress updates on social media",
+                StartDate = new DateTime(2025, 10, 6),
+                EndDate = new DateTime(2025, 11, 7),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.Normal,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = socialMediaCampaign.Id,
+                Assignee = "PR Team",
+                Category = "Marketing",
+                EstimatedHours = 14
+            };
+
+            var sponsorMeetings = new GanttTask
+            {
+                Name = "Weekly Sponsor Meetings",
+                Description = "Conduct weekly progress meetings with sponsors",
+                StartDate = new DateTime(2025, 10, 6),
+                EndDate = new DateTime(2025, 11, 5),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.Normal,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = sponsorOutreach.Id,
+                Assignee = "PR Lead",
+                Category = "Marketing",
+                EstimatedHours = 9
+            };
+
+            var sponsorReports = new GanttTask
+            {
+                Name = "Sponsor Progress Reports",
+                Description = "Create detailed progress reports for sponsors",
+                StartDate = new DateTime(2025, 10, 13),
+                EndDate = new DateTime(2025, 11, 5),
+                Status = TaskStatus.NotStarted,
+                Priority = TaskPriority.Normal,
+                Progress = 0,
+                ProjectId = frcProject.Id,
+                ParentTaskId = sponsorOutreach.Id,
+                Assignee = "PR Lead",
+                Category = "Marketing",
+                EstimatedHours = 6
+            };
+
+            // Add PR subtasks
+            Tasks.AddRange(new[] { createContentPlan, dailyUpdates, sponsorMeetings, sponsorReports });
+            await SaveChangesAsync();
+
+            // Task dependencies are handled by the task scheduling above
+            // The hierarchical structure is maintained through ParentTaskId relationships
         }
 
         // Seed project templates
@@ -396,6 +776,37 @@ public class AppDbContext : DbContext
                     new() { Name = "Final Preparations", Description = "Finalize all event details and contingency planning", EstimatedDurationDays = 5, StartOffsetDays = 35, Order = 6, Priority = TaskPriority.High, DefaultAssigneeRole = "Event Manager", EstimatedHours = 40 },
                     new() { Name = "Event Execution", Description = "Execute the event and manage on-site operations", EstimatedDurationDays = 1, StartOffsetDays = 40, Order = 7, Priority = TaskPriority.Critical, DefaultAssigneeRole = "Event Manager", EstimatedHours = 12, IsMilestone = true },
                     new() { Name = "Post-Event Follow-up", Description = "Post-event analysis, feedback collection, and reporting", EstimatedDurationDays = 3, StartOffsetDays = 41, Order = 8, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Event Manager", EstimatedHours = 20 }
+                }
+            },
+            new ProjectTemplate
+            {
+                Name = "FRC Robot Build Season",
+                Description = "FIRST Robotics Competition robot design and build project for 6-week build season",
+                Category = "Robotics",
+                EstimatedDurationDays = 42,
+                EstimatedBudget = 15000m,
+                IsBuiltIn = true,
+                Icon = "🤖",
+                TaskTemplates = new List<TaskTemplate>
+                {
+                    // Mechanical Group Tasks
+                    new() { Name = "Build Drivetrain", Description = "Design and build robot drivetrain system", EstimatedDurationDays = 12, StartOffsetDays = 5, Order = 1, Priority = TaskPriority.High, DefaultAssigneeRole = "Mechanical Lead", EstimatedHours = 60 },
+                    new() { Name = "Build Intake", Description = "Design and build game piece intake mechanism", EstimatedDurationDays = 10, StartOffsetDays = 7, Order = 2, Priority = TaskPriority.High, DefaultAssigneeRole = "Mechanical Team", EstimatedHours = 50 },
+                    new() { Name = "Build 2-Stage Elevator", Description = "Design and build two-stage elevator system", EstimatedDurationDays = 14, StartOffsetDays = 10, Order = 3, Priority = TaskPriority.High, DefaultAssigneeRole = "Mechanical Team", EstimatedHours = 70 },
+                    
+                    // Electrical Group Tasks  
+                    new() { Name = "Mount RoboRio", Description = "Install and secure RoboRio control system", EstimatedDurationDays = 2, StartOffsetDays = 12, Order = 4, Priority = TaskPriority.High, DefaultAssigneeRole = "Electrical Lead", EstimatedHours = 8 },
+                    new() { Name = "Mount Drivetrain SparkMaxes", Description = "Install motor controllers for drivetrain", EstimatedDurationDays = 3, StartOffsetDays = 17, Order = 5, Priority = TaskPriority.High, DefaultAssigneeRole = "Electrical Team", EstimatedHours = 12 },
+                    new() { Name = "Connect Swerve Modules", Description = "Wire swerve modules to drivetrain controllers", EstimatedDurationDays = 4, StartOffsetDays = 20, Order = 6, Priority = TaskPriority.High, DefaultAssigneeRole = "Electrical Team", EstimatedHours = 16 },
+                    
+                    // Programming Group Tasks
+                    new() { Name = "Drivetrain Programming", Description = "Program swerve drive control system", EstimatedDurationDays = 8, StartOffsetDays = 15, Order = 7, Priority = TaskPriority.High, DefaultAssigneeRole = "Programming Lead", EstimatedHours = 32 },
+                    new() { Name = "Autonomous Programming", Description = "Develop autonomous routines and path planning", EstimatedDurationDays = 10, StartOffsetDays = 18, Order = 8, Priority = TaskPriority.High, DefaultAssigneeRole = "Programming Team", EstimatedHours = 40 },
+                    new() { Name = "Vision System Programming", Description = "Implement computer vision for target tracking", EstimatedDurationDays = 12, StartOffsetDays = 20, Order = 9, Priority = TaskPriority.Normal, DefaultAssigneeRole = "Programming Team", EstimatedHours = 48 },
+                    
+                    // Public Relations Tasks
+                    new() { Name = "Social Media Campaign", Description = "Document build progress and engage community", EstimatedDurationDays = 35, StartOffsetDays = 2, Order = 10, Priority = TaskPriority.Normal, DefaultAssigneeRole = "PR Team", EstimatedHours = 20 },
+                    new() { Name = "Sponsor Outreach", Description = "Engage with sponsors and document robot progress", EstimatedDurationDays = 30, StartOffsetDays = 5, Order = 11, Priority = TaskPriority.Normal, DefaultAssigneeRole = "PR Lead", EstimatedHours = 15 }
                 }
             }
         };
