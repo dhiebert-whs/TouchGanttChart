@@ -19,6 +19,8 @@
 # Build output
 bin/
 obj/
+**/bin/
+**/obj/
 
 # Mono auto generated files
 mono_crash.*
