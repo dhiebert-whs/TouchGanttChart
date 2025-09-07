@@ -12,7 +12,8 @@
       "Bash(dotnet ef database:*)",
       "Bash(sqlite3:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(TASKKILL /F /IM TouchGanttChart.exe)"
     ],
     "deny": []
   }

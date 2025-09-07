@@ -12,6 +12,8 @@
         MinWidth="800"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
         IsManipulationEnabled="True"
         Background="#f8f9fa">
     

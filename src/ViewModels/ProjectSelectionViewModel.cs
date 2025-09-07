@@ -97,6 +97,50 @@ public partial class ProjectSelectionViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
+    /// Command to delete a project
+    /// </summary>
+    [RelayCommand]
+    private async Task DeleteProjectAsync(Project project)
+    {
+        if (project == null) return;
+
+        try
+        {
+            IsLoading = true;
+            SetStatus($"Deleting project '{project.Name}'...");
+
+            await _dataService.DeleteProjectAsync(project.Id);
+            
+            // Remove from collections
+            AllProjects.Remove(project);
+            Projects.Remove(project);
+            
+            // Clear selection if this project was selected
+            if (SelectedProject?.Id == project.Id)
+            {
+                SelectedProject = null;
+            }
+
+            SetStatus($"Project '{project.Name}' deleted successfully");
+            _logger.LogInformation("Project {ProjectName} (ID: {ProjectId}) deleted successfully", 
+                project.Name, project.Id);
+
+            // Refresh the projects list
+            OnPropertyChanged(nameof(HasProjects));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting project {ProjectName} (ID: {ProjectId})", 
+                project.Name, project.Id);
+            SetError($"Failed to delete project: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
     /// Loads all projects from the data service
     /// </summary>
     private async Task LoadProjectsAsync()

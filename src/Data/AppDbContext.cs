@@ -699,8 +699,34 @@ public class AppDbContext : DbContext
             Tasks.AddRange(new[] { createContentPlan, dailyUpdates, sponsorMeetings, sponsorReports });
             await SaveChangesAsync();
 
-            // Task dependencies are handled by the task scheduling above
-            // The hierarchical structure is maintained through ParentTaskId relationships
+            // Add realistic task dependencies for FRC project
+            // These show cross-team dependencies that are common in robotics projects
+            
+            // Programming depends on electrical completion
+            drivetrainProgramming.Dependencies.Add(mountSparkMaxes);
+            drivetrainProgramming.Dependencies.Add(connectSwerveModules);
+            autonomousProgramming.Dependencies.Add(drivetrainProgramming);
+            visionProgramming.Dependencies.Add(drivetrainProgramming);
+            
+            // Swerve module mounting depends on individual module assembly
+            mountSwerveModules.Dependencies.Add(assembleSwerve1);
+            mountSwerveModules.Dependencies.Add(assembleSwerve2);
+            mountSwerveModules.Dependencies.Add(assembleSwerve3);
+            mountSwerveModules.Dependencies.Add(assembleSwerve4);
+            
+            // Electrical work depends on mechanical frame
+            mountRoboRio.Dependencies.Add(assembleFrame);
+            mountSparkMaxes.Dependencies.Add(assembleFrame);
+            
+            // Swerve electrical depends on mounting the modules
+            connectSwerveModules.Dependencies.Add(mountSwerveModules);
+            connectSwerveModules.Dependencies.Add(mountSparkMaxes);
+            
+            // PR activities depend on having something to show
+            socialMediaCampaign.Dependencies.Add(buildDrivetrain);
+            sponsorOutreach.Dependencies.Add(buildDrivetrain);
+
+            await SaveChangesAsync();
         }
 
         // Seed project templates

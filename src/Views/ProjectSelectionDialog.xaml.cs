@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using TouchGanttChart.Models;
 using TouchGanttChart.ViewModels;
@@ -76,6 +77,32 @@ public partial class ProjectSelectionDialog : Window
             DataContext is ProjectSelectionViewModel viewModel)
         {
             viewModel.SelectedProject = project;
+        }
+    }
+
+    /// <summary>
+    /// Handles delete button clicks on project cards
+    /// </summary>
+    private void OnDeleteButtonClick(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true; // Prevent project selection when clicking delete
+        
+        if (sender is Button button && 
+            button.CommandParameter is Project project && 
+            DataContext is ProjectSelectionViewModel viewModel)
+        {
+            // Show confirmation dialog
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete the project '{project.Name}'?\n\nThis action cannot be undone and will permanently remove the project and all its tasks.",
+                "Delete Project",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                MessageBoxResult.No);
+                
+            if (result == MessageBoxResult.Yes)
+            {
+                viewModel.DeleteProjectCommand?.Execute(project);
+            }
         }
     }
 

@@ -12,6 +12,8 @@
         MinWidth="700"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
         IsManipulationEnabled="True"
         Background="#f8f9fa">
     
@@ -133,11 +135,25 @@
                                                Foreground="#212529"
                                                Margin="0,0,0,4"/>
                                                
-                                    <Rectangle Grid.Row="0" Grid.Column="1"
-                                               Width="16" Height="16"
-                                               Fill="{Binding Color}"
-                                               RadiusX="2" RadiusY="2"
-                                               Margin="8,2,0,0"/>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                        <Rectangle Width="16" Height="16"
+                                                   Fill="{Binding Color}"
+                                                   RadiusX="2" RadiusY="2"
+                                                   Margin="0,2,8,0"/>
+                                        
+                                        <Button Content="🗑️" 
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.DeleteProjectCommand}"
+                                                CommandParameter="{Binding}"
+                                                Width="32" Height="32"
+                                                FontSize="16"
+                                                Background="#dc3545"
+                                                Foreground="White"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                ToolTip="Delete Project"
+                                                Margin="0,-2,0,0"
+                                                Click="OnDeleteButtonClick"/>
+                                    </StackPanel>
 
                                     <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                                Text="{Binding Description}" 

@@ -203,7 +203,8 @@
             <!-- Day View -->
             <views:DayView x:Name="DayViewControl"
                           Visibility="{Binding IsDayViewActive, Converter={StaticResource BoolToVisConverter}}"
-                          DataContext="{Binding DayViewModel}"/>
+                          DataContext="{Binding DayViewModel}"
+                          Grid.ZIndex="1"/>
         </Grid>
 
         <!-- Status bar -->

@@ -117,13 +117,13 @@ public partial class App : Application
                 services.AddDbContext<AppDbContext>();
 
                 // Register services
-                services.AddSingleton<IDataService, DataService>();
+                services.AddScoped<IDataService, DataService>();
                 services.AddSingleton<IPdfExportService, PdfExportService>();
-                services.AddSingleton<IProjectTemplateService, ProjectTemplateService>();
+                services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
                 services.AddTransient<ITouchGestureService, TouchGestureService>();
 
                 // Register ViewModels
-                services.AddSingleton<MainWindowViewModel>();
+                services.AddScoped<MainWindowViewModel>();
                 services.AddTransient<TaskEditDialogViewModel>();
                 services.AddTransient<TaskDependencyDialogViewModel>();
                 services.AddTransient<ProjectTemplateSelectionViewModel>();
@@ -131,7 +131,7 @@ public partial class App : Application
                 services.AddTransient<DayViewModel>();
 
                 // Register Views
-                services.AddSingleton<MainWindow>();
+                services.AddScoped<MainWindow>();
 
                 // Add logging
                 services.AddLogging(builder =>
