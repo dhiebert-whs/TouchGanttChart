@@ -821,9 +821,9 @@ public class GanttTimelineCanvas : Canvas
         // Apply different styling based on task relationships
         if (task.ParentTask != null)
         {
-            // This is a subtask - use dashed border
-            container.BorderDashArray = new DoubleCollection { 3, 2 };
+            // This is a subtask - use thicker border with different color
             container.BorderThickness = new Thickness(2);
+            container.BorderBrush = new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Yellow for subtasks
         }
         else if (task.SubTasks.Count > 0)
         {
@@ -832,8 +832,9 @@ public class GanttTimelineCanvas : Canvas
         }
         else if (task.Dependencies != null && task.Dependencies.Count > 0)
         {
-            // This task has dependencies - use different border style
-            container.BorderDashArray = new DoubleCollection { 5, 3, 1, 3 };
+            // This task has dependencies - use thinner border with blue color
+            container.BorderThickness = new Thickness(1);
+            container.BorderBrush = new SolidColorBrush(Color.FromRgb(0, 123, 255)); // Blue for dependent tasks
         }
 
         // Add left border indicator for priority

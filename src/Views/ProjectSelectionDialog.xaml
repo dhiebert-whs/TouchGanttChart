@@ -193,7 +193,7 @@
                 </ItemsControl>
                 
                 <!-- No projects message -->
-                <Border Style="{StaticResource ProjectCardStyle}">
+                <Border>
                     <Border.Style>
                         <Style TargetType="Border" BasedOn="{StaticResource ProjectCardStyle}">
                             <Setter Property="Visibility" Value="Collapsed"/>

@@ -45,7 +45,7 @@ public class DependencyService : IDependencyService
         foreach (var dependentTask in dependentTasks)
         {
             // Only shift if the dependent task hasn't started yet or is in progress
-            if (dependentTask.Status == TaskStatus.Completed || dependentTask.Status == TaskStatus.Cancelled)
+            if (dependentTask.Status == Models.TaskStatus.Completed || dependentTask.Status == Models.TaskStatus.Cancelled)
                 continue;
 
             var originalStart = dependentTask.StartDate;
