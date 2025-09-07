@@ -225,7 +225,7 @@ public class ProjectTests
     [Theory]
     [InlineData(TouchGanttChart.Models.TaskStatus.Completed, "Completed")]
     [InlineData(TouchGanttChart.Models.TaskStatus.InProgress, "At Risk")] // Assuming 50% progress for this test
-    public void HealthStatus_ReturnsCorrectStatus(TaskStatus status, string expectedHealth)
+    public void HealthStatus_ReturnsCorrectStatus(TouchGanttChart.Models.TaskStatus status, string expectedHealth)
     {
         // Arrange
         var project = new Project { Status = status };
