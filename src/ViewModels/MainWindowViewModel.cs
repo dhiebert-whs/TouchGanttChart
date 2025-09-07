@@ -557,11 +557,42 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task ExportPdfAsync()
     {
         if (SelectedProject == null) return;
-        
-        await ExecuteAsync(
-            async () => await _pdfExportService.ExportProjectToPdfAsync(SelectedProject, Tasks.ToList()),
-            "Exporting to PDF...",
-            "PDF export completed successfully");
+
+        try
+        {
+            // Show save file dialog
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Export Project to PDF",
+                Filter = "PDF files (*.pdf)|*.pdf",
+                DefaultExt = "pdf",
+                FileName = $"{SelectedProject.Name}_Project_{DateTime.Now:yyyyMMdd_HHmmss}.pdf",
+                InitialDirectory = _pdfExportService.GetDefaultExportPath()
+            };
+
+            var result = saveFileDialog.ShowDialog(System.Windows.Application.Current.MainWindow);
+            if (result != true) return;
+
+            await ExecuteAsync(
+                async () => 
+                {
+                    var exportedPath = await _pdfExportService.ExportProjectToPdfAsync(SelectedProject, Tasks.ToList(), saveFileDialog.FileName);
+                    
+                    // Optionally show the exported file location
+                    System.Windows.MessageBox.Show(
+                        $"PDF exported successfully to:\n{exportedPath}", 
+                        "Export Complete", 
+                        System.Windows.MessageBoxButton.OK, 
+                        System.Windows.MessageBoxImage.Information);
+                },
+                "Exporting to PDF...",
+                "PDF export completed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during PDF export");
+            SetStatus($"PDF export failed: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -715,4 +746,27 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets a value indicating whether there are no tasks to display.
     /// </summary>
     public bool HasNoTasks => Tasks.Count == 0;
+
+    /// <summary>
+    /// Updates a task in the database and refreshes the task list
+    /// </summary>
+    /// <param name="task">The task to update</param>
+    public async Task UpdateTaskAsync(GanttTask task)
+    {
+        await ExecuteAsync(
+            async () =>
+            {
+                await _dataService.UpdateTaskAsync(task);
+                
+                // Find and update the task in the local collection
+                var existingTask = Tasks.FirstOrDefault(t => t.Id == task.Id);
+                if (existingTask != null)
+                {
+                    var index = Tasks.IndexOf(existingTask);
+                    Tasks[index] = task;
+                }
+            },
+            "Updating task...",
+            "Task updated successfully");
+    }
 }

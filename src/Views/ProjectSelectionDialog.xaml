@@ -193,8 +193,17 @@
                 </ItemsControl>
                 
                 <!-- No projects message -->
-                <Border Style="{StaticResource ProjectCardStyle}" 
-                        Visibility="{Binding HasProjects, Converter={StaticResource BoolToVisConverter}}">
+                <Border Style="{StaticResource ProjectCardStyle}">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource ProjectCardStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasProjects}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock Text="📋" 
                                    FontSize="48" 

@@ -132,6 +132,11 @@ public class GanttTask
     /// </summary>
     public DateTime LastModifiedDate { get; set; } = DateTime.Now;
 
+    /// <summary>
+    /// Gets or sets the actual completion date (when task was completed).
+    /// </summary>
+    public DateTime? CompletionDate { get; set; }
+
     // Calculated properties
     /// <summary>
     /// Gets the duration of the task.
@@ -189,4 +194,21 @@ public class GanttTask
     /// Gets a value indicating whether the task has progress greater than 0.
     /// </summary>
     public bool HasProgress => Progress > 0;
+
+    /// <summary>
+    /// Gets a value indicating whether the task is completed ahead of schedule.
+    /// </summary>
+    public bool IsCompletedEarly => CompletionDate.HasValue && CompletionDate.Value < EndDate;
+
+    /// <summary>
+    /// Gets the number of days the task was completed early (positive) or late (negative).
+    /// </summary>
+    public double CompletionVarianceDays
+    {
+        get
+        {
+            if (!CompletionDate.HasValue) return 0;
+            return (EndDate - CompletionDate.Value).TotalDays;
+        }
+    }
 }

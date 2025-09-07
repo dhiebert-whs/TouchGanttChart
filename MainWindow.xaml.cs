@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Windows;
 using TouchGanttChart.Controls;
+using TouchGanttChart.Models;
 using TouchGanttChart.ViewModels;
 
 namespace TouchGanttChart;
@@ -40,6 +41,14 @@ public partial class MainWindow : Window
         {
             _logger.LogInformation("MainWindow loading - initializing view model");
             await _viewModel.InitializeAsync();
+            
+            // Wire up the Gantt canvas events
+            if (GanttCanvas != null)
+            {
+                GanttCanvas.TaskDoubleClicked += OnGanttTaskDoubleClicked;
+                GanttCanvas.TaskDatesChanged += OnGanttTaskDatesChanged;
+            }
+            
             _logger.LogInformation("MainWindow loaded successfully");
         }
         catch (Exception ex)
@@ -96,5 +105,55 @@ public partial class MainWindow : Window
                 _viewModel.EditTaskCommand.Execute(null);
             }
         }
+    }
+
+    /// <summary>
+    /// Handles task double-click events from the Gantt chart
+    /// </summary>
+    private async void OnGanttTaskDoubleClicked(object? sender, GanttTask e)
+    {
+        _logger.LogDebug("Task double-clicked in Gantt chart: {TaskName}", e.Name);
+        _viewModel.SelectedTask = e;
+        
+        // Execute the edit task command
+        if (_viewModel.EditTaskCommand?.CanExecute(null) == true)
+        {
+            if (_viewModel.EditTaskCommand is IAsyncRelayCommand asyncCommand)
+            {
+                await asyncCommand.ExecuteAsync(null);
+            }
+            else
+            {
+                _viewModel.EditTaskCommand.Execute(null);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles task date changes from the Gantt chart dragging
+    /// </summary>
+    private void OnGanttTaskDatesChanged(object? sender, TaskDatesChangedEventArgs e)
+    {
+        _logger.LogDebug("Task dates changed via dragging: {TaskName} - New dates: {StartDate} to {EndDate}", 
+            e.Task.Name, e.NewStartDate.ToShortDateString(), e.NewEndDate.ToShortDateString());
+        
+        // Update the task dates
+        e.Task.StartDate = e.NewStartDate;
+        e.Task.EndDate = e.NewEndDate;
+        e.Task.LastModifiedDate = DateTime.UtcNow;
+        
+        // Update the task in the view model and database
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _viewModel.UpdateTaskAsync(e.Task);
+                _logger.LogInformation("Task {TaskName} dates updated successfully via drag", e.Task.Name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating task {TaskName} dates via drag", e.Task.Name);
+            }
+        });
     }
 }

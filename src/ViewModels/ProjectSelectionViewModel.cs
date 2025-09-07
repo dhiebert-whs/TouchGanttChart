@@ -41,7 +41,7 @@ public partial class ProjectSelectionViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets a value indicating whether there are projects available
     /// </summary>
-    public bool HasProjects => !Projects.Any();
+    public bool HasProjects => Projects.Any();
 
     /// <summary>
     /// Gets a value indicating whether a project can be opened

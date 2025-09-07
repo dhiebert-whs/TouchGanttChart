@@ -28,6 +28,12 @@ public class GanttTimelineCanvas : Canvas
     private readonly List<UIElement> _dependencyLines = new();
     private Point _lastPanPoint;
     private bool _isPanning;
+    private DateTime _lastClickTime = DateTime.MinValue;
+    private GanttTask? _lastClickedTask;
+    private bool _isDraggingTask;
+    private GanttTask? _draggingTask;
+    private Point _dragStartPoint;
+    private Border? _draggedTaskBar;
 
     static GanttTimelineCanvas()
     {
@@ -125,6 +131,20 @@ public class GanttTimelineCanvas : Canvas
         get => (TimelineViewMode)GetValue(ViewModeProperty);
         set => SetValue(ViewModeProperty, value);
     }
+
+    #endregion
+
+    #region Events
+
+    /// <summary>
+    /// Event fired when a task is double-clicked
+    /// </summary>
+    public event EventHandler<GanttTask>? TaskDoubleClicked;
+
+    /// <summary>
+    /// Event fired when a task's dates are changed through dragging
+    /// </summary>
+    public event EventHandler<TaskDatesChangedEventArgs>? TaskDatesChanged;
 
     #endregion
 
@@ -422,10 +442,13 @@ public class GanttTimelineCanvas : Canvas
             Tag = task
         };
 
-        // Set colors based on task status
+        // Set colors based on task status and dependencies
         var (fillBrush, borderBrush) = GetTaskColors(task);
         container.Background = fillBrush;
         container.BorderBrush = borderBrush;
+
+        // Add visual indicators for task relationships
+        ApplyTaskRelationshipStyling(container, task);
 
         // Create the main content grid
         var contentGrid = new Grid();
@@ -484,7 +507,9 @@ public class GanttTimelineCanvas : Canvas
         Canvas.SetTop(container, y);
 
         // Add touch events
-        container.MouseLeftButtonDown += (s, e) => OnTaskBarClicked(task, e);
+        container.MouseLeftButtonDown += (s, e) => OnTaskBarMouseDown(task, container, e);
+        container.MouseMove += (s, e) => OnTaskBarMouseMove(task, container, e);
+        container.MouseLeftButtonUp += (s, e) => OnTaskBarMouseUp(task, container, e);
         container.TouchDown += (s, e) => OnTaskBarTouched(task, e);
 
         return new TaskBarElement(task, container);
@@ -540,12 +565,31 @@ public class GanttTimelineCanvas : Canvas
 
         pathGeometry.Figures.Add(pathFigure);
 
+        // Style dependency lines differently based on task relationships
+        var strokeColor = Color.FromRgb(52, 144, 220); // Default blue
+        var strokeThickness = 2.0;
+        var dashArray = new DoubleCollection { 5, 3 };
+
+        // Parent-child relationships use solid lines
+        if (task.ParentTask != null && task.ParentTask == dependency)
+        {
+            strokeColor = Color.FromRgb(108, 117, 125); // Gray for hierarchy
+            dashArray = null; // Solid line
+            strokeThickness = 3.0;
+        }
+        // Critical path uses thicker red lines
+        else if (dependency.Priority == TaskPriority.Critical || task.Priority == TaskPriority.Critical)
+        {
+            strokeColor = Color.FromRgb(220, 53, 69); // Red for critical
+            strokeThickness = 3.0;
+        }
+
         var dependencyPath = new Path
         {
             Data = pathGeometry,
-            Stroke = new SolidColorBrush(Color.FromRgb(52, 144, 220)),
-            StrokeThickness = 2,
-            StrokeDashArray = new DoubleCollection { 5, 3 }
+            Stroke = new SolidColorBrush(strokeColor),
+            StrokeThickness = strokeThickness,
+            StrokeDashArray = dashArray
         };
 
         Children.Add(dependencyPath);
@@ -653,9 +697,81 @@ public class GanttTimelineCanvas : Canvas
         ZoomLevel = Math.Max(0.1, Math.Min(5.0, newZoom));
     }
 
-    private void OnTaskBarClicked(GanttTask task, MouseButtonEventArgs e)
+    private void OnTaskBarMouseDown(GanttTask task, Border container, MouseButtonEventArgs e)
     {
+        var now = DateTime.Now;
+        var timeSinceLastClick = now - _lastClickTime;
+        
+        // Check for double-click (within 500ms and same task)
+        if (timeSinceLastClick.TotalMilliseconds < 500 && _lastClickedTask == task)
+        {
+            TaskDoubleClicked?.Invoke(this, task);
+            e.Handled = true;
+            return;
+        }
+        
+        // Start drag operation
+        _isDraggingTask = true;
+        _draggingTask = task;
+        _draggedTaskBar = container;
+        _dragStartPoint = e.GetPosition(this);
+        container.CaptureMouse();
+        
         SelectedTask = task;
+        _lastClickTime = now;
+        _lastClickedTask = task;
+        e.Handled = true;
+    }
+
+    private void OnTaskBarMouseMove(GanttTask task, Border container, MouseEventArgs e)
+    {
+        if (!_isDraggingTask || _draggingTask != task || !container.IsMouseCaptured)
+            return;
+
+        var currentPoint = e.GetPosition(this);
+        var deltaX = currentPoint.X - _dragStartPoint.X;
+        
+        // Calculate new position
+        var currentLeft = Canvas.GetLeft(container);
+        var newLeft = Math.Max(0, currentLeft + deltaX);
+        
+        // Update visual position
+        Canvas.SetLeft(container, newLeft);
+        _dragStartPoint = currentPoint;
+        
+        e.Handled = true;
+    }
+
+    private void OnTaskBarMouseUp(GanttTask task, Border container, MouseEventArgs e)
+    {
+        if (!_isDraggingTask || _draggingTask != task)
+            return;
+
+        _isDraggingTask = false;
+        container.ReleaseMouseCapture();
+        
+        // Calculate new dates based on position
+        var totalDays = (TimelineEnd - TimelineStart).TotalDays;
+        if (totalDays <= 0)
+        {
+            _draggingTask = null;
+            _draggedTaskBar = null;
+            return;
+        }
+
+        var pixelsPerDay = (ActualWidth * ZoomLevel) / totalDays;
+        var currentLeft = Canvas.GetLeft(container);
+        var dayOffset = currentLeft / pixelsPerDay;
+        
+        var duration = task.EndDate - task.StartDate;
+        var newStartDate = TimelineStart.AddDays(dayOffset);
+        var newEndDate = newStartDate.Add(duration);
+        
+        // Fire the event to update the task
+        TaskDatesChanged?.Invoke(this, new TaskDatesChangedEventArgs(task, newStartDate, newEndDate));
+        
+        _draggingTask = null;
+        _draggedTaskBar = null;
         e.Handled = true;
     }
 
@@ -698,6 +814,88 @@ public class GanttTimelineCanvas : Canvas
                 new SolidColorBrush(Color.FromRgb(73, 80, 87))
             )
         };
+    }
+
+    private void ApplyTaskRelationshipStyling(Border container, GanttTask task)
+    {
+        // Apply different styling based on task relationships
+        if (task.ParentTask != null)
+        {
+            // This is a subtask - use dashed border
+            container.BorderDashArray = new DoubleCollection { 3, 2 };
+            container.BorderThickness = new Thickness(2);
+        }
+        else if (task.SubTasks.Count > 0)
+        {
+            // This is a parent task - use thicker border
+            container.BorderThickness = new Thickness(3);
+        }
+        else if (task.Dependencies != null && task.Dependencies.Count > 0)
+        {
+            // This task has dependencies - use different border style
+            container.BorderDashArray = new DoubleCollection { 5, 3, 1, 3 };
+        }
+
+        // Add left border indicator for priority
+        if (task.Priority == TaskPriority.Critical)
+        {
+            var priorityIndicator = new Border
+            {
+                Width = 4,
+                Background = new SolidColorBrush(Color.FromRgb(220, 53, 69)), // Red for critical
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            
+            if (container.Child is Grid grid)
+            {
+                grid.Children.Insert(0, priorityIndicator);
+            }
+        }
+        else if (task.Priority == TaskPriority.High)
+        {
+            var priorityIndicator = new Border
+            {
+                Width = 4,
+                Background = new SolidColorBrush(Color.FromRgb(255, 193, 7)), // Yellow for high
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            
+            if (container.Child is Grid grid)
+            {
+                grid.Children.Insert(0, priorityIndicator);
+            }
+        }
+
+        // Add completion indicator for early/late completion
+        if (task.CompletionDate.HasValue)
+        {
+            var completionIndicator = new Ellipse
+            {
+                Width = 12,
+                Height = 12,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, -6, -6, 0)
+            };
+
+            if (task.IsCompletedEarly)
+            {
+                completionIndicator.Fill = new SolidColorBrush(Color.FromRgb(40, 167, 69)); // Green
+            }
+            else if (task.CompletionVarianceDays < 0)
+            {
+                completionIndicator.Fill = new SolidColorBrush(Color.FromRgb(220, 53, 69)); // Red
+            }
+            else
+            {
+                completionIndicator.Fill = new SolidColorBrush(Color.FromRgb(0, 123, 255)); // Blue
+            }
+
+            if (container.Child is Grid grid)
+            {
+                grid.Children.Add(completionIndicator);
+            }
+        }
     }
 
     private void UpdateTaskSelection()
@@ -861,7 +1059,8 @@ public class GanttTimelineCanvas : Canvas
 
             if (width > 40)
             {
-                CreateHeaderLabel($"Week {GetWeekOfYear(currentWeek)}", startX, width, 32, 10, FontWeights.Normal, Brushes.Gray);
+                var weekLabel = $"Week {GetWeekOfYear(currentWeek)} ({currentWeek:MMM dd})";
+                CreateHeaderLabel(weekLabel, startX, width, 32, 10, FontWeights.Normal, Brushes.Gray);
             }
             currentWeek = currentWeek.AddDays(7);
         }

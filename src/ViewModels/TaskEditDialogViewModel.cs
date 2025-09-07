@@ -35,26 +35,69 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
     private bool _isNewTask;
 
     /// <summary>
+    /// Gets the completion status text for display
+    /// </summary>
+    public string CompletionStatusText
+    {
+        get
+        {
+            if (Task.CompletionDate == null) return string.Empty;
+            
+            var variance = Task.CompletionVarianceDays;
+            if (variance > 0)
+                return $"Completed {variance:F1} days early";
+            else if (variance < 0)
+                return $"Completed {Math.Abs(variance):F1} days late";
+            else
+                return "Completed on schedule";
+        }
+    }
+
+    /// <summary>
+    /// Gets the completion status color for display
+    /// </summary>
+    public string CompletionStatusColor
+    {
+        get
+        {
+            if (Task.CompletionDate == null) return "#6c757d";
+            
+            var variance = Task.CompletionVarianceDays;
+            if (variance > 0)
+                return "#28a745"; // Green for early
+            else if (variance < 0)
+                return "#dc3545"; // Red for late
+            else
+                return "#007bff"; // Blue for on time
+        }
+    }
+
+    /// <summary>
     /// Event fired when a dialog result is requested
     /// </summary>
     public event EventHandler<bool?>? DialogResultRequested;
 
     /// <summary>
+    /// Event fired when a task's completion date changes and dependencies need shifting
+    /// </summary>
+    public event EventHandler<GanttTask>? TaskCompletionChanged;
+
+    /// <summary>
     /// Available task status options
     /// </summary>
-    public static readonly ReadOnlyCollection<TouchGanttChart.Models.TaskStatus> StatusOptions = new(
+    public ReadOnlyCollection<TouchGanttChart.Models.TaskStatus> StatusOptions { get; } = new(
         Enum.GetValues<TouchGanttChart.Models.TaskStatus>().ToList());
 
     /// <summary>
     /// Available task priority options
     /// </summary>
-    public static readonly ReadOnlyCollection<TaskPriority> PriorityOptions = new(
+    public ReadOnlyCollection<TaskPriority> PriorityOptions { get; } = new(
         Enum.GetValues<TaskPriority>().ToList());
 
     /// <summary>
     /// Available task category options
     /// </summary>
-    public static readonly ReadOnlyCollection<string> CategoryOptions = new(new[]
+    public ReadOnlyCollection<string> CategoryOptions { get; } = new(new[]
     {
         "General",
         "Mechanical",
@@ -66,6 +109,19 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
         "Research",
         "Planning",
         "Marketing"
+    });
+
+    /// <summary>
+    /// Available assignee options (team roles)
+    /// </summary>
+    public ReadOnlyCollection<string> AssigneeOptions { get; } = new(new[]
+    {
+        "",
+        "Mechanical",
+        "Electrical", 
+        "Programming",
+        "PR",
+        "Leadership"
     });
 
     public TaskEditDialogViewModel(IDataService dataService, ILogger<TaskEditDialogViewModel> logger)
@@ -111,8 +167,10 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
             Priority = task.Priority,
             Progress = task.Progress,
             Assignee = task.Assignee,
+            Category = task.Category,
             EstimatedHours = task.EstimatedHours,
             ActualHours = task.ActualHours,
+            CompletionDate = task.CompletionDate,
             ProjectId = task.ProjectId,
             ParentTaskId = task.ParentTaskId,
             CreatedDate = task.CreatedDate,
@@ -171,6 +229,17 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
 
             Task.LastModifiedDate = DateTime.UtcNow;
 
+            // Check if completion date changed for dependency shifting
+            bool completionDateChanged = false;
+            if (!IsNewTask && _originalTask.CompletionDate != Task.CompletionDate)
+            {
+                completionDateChanged = true;
+                _logger.LogInformation("Task {TaskName} completion date changed from {OldDate} to {NewDate}", 
+                    Task.Name, 
+                    _originalTask.CompletionDate?.ToShortDateString() ?? "None",
+                    Task.CompletionDate?.ToShortDateString() ?? "None");
+            }
+
             if (IsNewTask)
             {
                 Task.CreatedDate = DateTime.UtcNow;
@@ -185,6 +254,12 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
                 _logger.LogInformation("Updated task: {TaskId} - {TaskName}", 
                     updatedTask.Id, updatedTask.Name);
                 StatusMessage = "Task updated successfully.";
+
+                // Fire completion changed event if needed
+                if (completionDateChanged)
+                {
+                    TaskCompletionChanged?.Invoke(this, updatedTask);
+                }
             }
 
             DialogResultRequested?.Invoke(this, true);

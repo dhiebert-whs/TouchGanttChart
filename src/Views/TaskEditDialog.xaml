@@ -18,6 +18,8 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        
         <!-- Touch-optimized button style -->
         <Style x:Key="TouchButtonStyle" TargetType="Button">
             <Setter Property="MinHeight" Value="44"/>
@@ -198,9 +200,11 @@
                     
                     <!-- Assignee -->
                     <Label Content="Assignee" Style="{StaticResource TouchLabelStyle}"/>
-                    <TextBox Text="{Binding Task.Assignee, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource TouchTextBoxStyle}"
-                             Margin="8,0,8,16"/>
+                    <ComboBox ItemsSource="{Binding AssigneeOptions}"
+                              SelectedItem="{Binding Task.Assignee, UpdateSourceTrigger=PropertyChanged}"
+                              IsEditable="True"
+                              Style="{StaticResource TouchComboBoxStyle}"
+                              Margin="8,0,8,16"/>
                     
                     <!-- Category -->
                     <Label Content="Category" Style="{StaticResource TouchLabelStyle}"/>
@@ -221,6 +225,23 @@
                     <TextBox Text="{Binding Task.ActualHours, UpdateSourceTrigger=PropertyChanged}" 
                              Style="{StaticResource TouchTextBoxStyle}"
                              Margin="8,0,8,16"/>
+                    
+                    <!-- Completion Date -->
+                    <Label Content="Completion Date" Style="{StaticResource TouchLabelStyle}"/>
+                    <DatePicker SelectedDate="{Binding Task.CompletionDate, UpdateSourceTrigger=PropertyChanged}" 
+                                Style="{StaticResource TouchDatePickerStyle}"
+                                Margin="8,0,8,16"/>
+                    
+                    <!-- Early/Late Completion Indicator -->
+                    <Label Content="Completion Status" Style="{StaticResource TouchLabelStyle}" 
+                           Visibility="{Binding Task.CompletionDate, Converter={StaticResource NullToVisibilityConverter}}"/>
+                    <TextBlock Text="{Binding CompletionStatusText}" 
+                               FontSize="14"
+                               Foreground="{Binding CompletionStatusColor}"
+                               FontWeight="SemiBold"
+                               Margin="8,0,8,16"
+                               Padding="12,8"
+                               Visibility="{Binding Task.CompletionDate, Converter={StaticResource NullToVisibilityConverter}}"/>
                 </StackPanel>
             </Grid>
         </ScrollViewer>
