@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Data;
 using TouchGanttChart.ViewModels;
 
 namespace TouchGanttChart.Views;
@@ -97,5 +99,24 @@ public partial class TaskEditDialog : Window
         };
         
         return dialog;
+    }
+}
+
+/// <summary>
+/// Converter that inverts a boolean value and converts to Visibility
+/// </summary>
+public class InvertBooleanToVisibilityConverter : IValueConverter
+{
+    public static readonly InvertBooleanToVisibilityConverter Instance = new();
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var boolValue = value is bool b && b;
+        return !boolValue ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
     }
 }

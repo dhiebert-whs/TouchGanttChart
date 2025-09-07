@@ -35,6 +35,36 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
     private bool _isNewTask;
 
     /// <summary>
+    /// Gets whether the progress field should be editable (only for leaf tasks)
+    /// </summary>
+    public bool IsProgressEditable => Task?.IsLeafTask ?? true;
+
+    /// <summary>
+    /// Gets the effective progress to display (calculated for parent tasks, manual for leaf tasks)
+    /// </summary>
+    public int EffectiveProgress => Task?.CalculatedProgress ?? 0;
+
+    /// <summary>
+    /// Gets the progress label text
+    /// </summary>
+    public string ProgressLabel => IsProgressEditable ? "Progress %" : "Progress % (Auto-calculated)";
+
+    /// <summary>
+    /// Gets whether this task has subtasks
+    /// </summary>
+    public bool HasSubTasks => Task?.HasSubTasks ?? false;
+
+    /// <summary>
+    /// Gets the hierarchy level of this task
+    /// </summary>
+    public int HierarchyLevel => Task?.HierarchyLevel ?? 0;
+
+    /// <summary>
+    /// Gets the hierarchy indent text for display
+    /// </summary>
+    public string HierarchyIndent => Task?.HierarchyIndent ?? "";
+
+    /// <summary>
     /// Gets the completion status text for display
     /// </summary>
     public string CompletionStatusText
@@ -369,6 +399,16 @@ public partial class TaskEditDialogViewModel : ViewModelBase, IDisposable
         {
             WindowTitle = $"Edit Task: {Task.Name}";
         }
+
+        // Notify property changes for hierarchical properties
+        OnPropertyChanged(nameof(IsProgressEditable));
+        OnPropertyChanged(nameof(EffectiveProgress));
+        OnPropertyChanged(nameof(ProgressLabel));
+        OnPropertyChanged(nameof(HasSubTasks));
+        OnPropertyChanged(nameof(HierarchyLevel));
+        OnPropertyChanged(nameof(HierarchyIndent));
+        OnPropertyChanged(nameof(CompletionStatusText));
+        OnPropertyChanged(nameof(CompletionStatusColor));
     }
 
     /// <summary>

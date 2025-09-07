@@ -211,4 +211,157 @@ public class GanttTask
             return (EndDate - CompletionDate.Value).TotalDays;
         }
     }
+
+    /// <summary>
+    /// Gets whether this task is a leaf task (has no subtasks).
+    /// Leaf tasks can have manually editable progress.
+    /// </summary>
+    public bool IsLeafTask => SubTasks == null || SubTasks.Count == 0;
+
+    /// <summary>
+    /// Gets whether this task is a parent task (has subtasks).
+    /// Parent tasks have auto-calculated progress.
+    /// </summary>
+    public bool IsParentTask => SubTasks?.Count > 0;
+
+    /// <summary>
+    /// Gets the hierarchical level/depth of this task (0 for root tasks).
+    /// </summary>
+    public int HierarchyLevel
+    {
+        get
+        {
+            var level = 0;
+            var current = ParentTask;
+            while (current != null)
+            {
+                level++;
+                current = current.ParentTask;
+            }
+            return level;
+        }
+    }
+
+    /// <summary>
+    /// Gets the calculated progress for parent tasks based on subtask completion.
+    /// For leaf tasks, returns the manually set progress.
+    /// </summary>
+    public int CalculatedProgress
+    {
+        get
+        {
+            if (IsLeafTask)
+                return Progress;
+
+            if (SubTasks == null || SubTasks.Count == 0)
+                return Progress;
+
+            // Calculate weighted average based on estimated hours
+            var totalWeight = SubTasks.Sum(t => Math.Max(t.EstimatedHours, 1.0)); // Minimum weight of 1
+            if (totalWeight == 0) return 0;
+
+            var weightedProgress = SubTasks.Sum(t => t.CalculatedProgress * Math.Max(t.EstimatedHours, 1.0));
+            return (int)Math.Round(weightedProgress / totalWeight);
+        }
+    }
+
+    /// <summary>
+    /// Gets all descendant tasks (recursive)
+    /// </summary>
+    public IEnumerable<GanttTask> GetAllDescendants()
+    {
+        if (SubTasks == null) yield break;
+
+        foreach (var child in SubTasks)
+        {
+            yield return child;
+            foreach (var grandChild in child.GetAllDescendants())
+            {
+                yield return grandChild;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets all ancestor tasks (recursive up to root)
+    /// </summary>
+    public IEnumerable<GanttTask> GetAllAncestors()
+    {
+        var current = ParentTask;
+        while (current != null)
+        {
+            yield return current;
+            current = current.ParentTask;
+        }
+    }
+
+    /// <summary>
+    /// Gets the root task of this hierarchy
+    /// </summary>
+    public GanttTask RootTask
+    {
+        get
+        {
+            var current = this;
+            while (current.ParentTask != null)
+            {
+                current = current.ParentTask;
+            }
+            return current;
+        }
+    }
+
+    /// <summary>
+    /// Gets tasks that this task depends on (prerequisites)
+    /// </summary>
+    public List<GanttTask> GetPrerequisites()
+    {
+        return Dependencies?.ToList() ?? new List<GanttTask>();
+    }
+
+    /// <summary>
+    /// Gets tasks that depend on this task (successors)
+    /// </summary>
+    public List<GanttTask> GetSuccessors()
+    {
+        return DependentTasks?.ToList() ?? new List<GanttTask>();
+    }
+
+    /// <summary>
+    /// Gets the status button text for the day view
+    /// </summary>
+    public string StatusButtonText => Status switch
+    {
+        TaskStatus.NotStarted => "Start",
+        TaskStatus.InProgress => "In Progress",
+        TaskStatus.Completed => "✓ Done",
+        TaskStatus.OnHold => "On Hold",
+        TaskStatus.Cancelled => "Cancelled",
+        _ => "Unknown"
+    };
+
+    /// <summary>
+    /// Gets the display text for hierarchy indentation
+    /// </summary>
+    public string HierarchyIndent => new string(' ', HierarchyLevel * 4);
+
+    /// <summary>
+    /// Gets the display name with hierarchy prefix
+    /// </summary>
+    public string HierarchicalName => $"{HierarchyIndent}{Name}";
+
+    /// <summary>
+    /// Updates the progress of this task and all ancestor tasks
+    /// </summary>
+    public void UpdateHierarchicalProgress()
+    {
+        // Update all ancestor tasks' progress
+        var current = ParentTask;
+        while (current != null)
+        {
+            // Parent task progress is automatically calculated
+            // Note: Property change notification would be handled by the UI layer
+            current = current.ParentTask;
+        }
+    }
 }

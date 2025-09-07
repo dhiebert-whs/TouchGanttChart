@@ -1,0 +1,335 @@
+﻿<UserControl x:Class="TouchGanttChart.Views.DayView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:TouchGanttChart.Views"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="800">
+    
+    <UserControl.Resources>
+        <!-- Touch-optimized button style -->
+        <Style x:Key="TouchButtonStyle" TargetType="Button">
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="MinWidth" Value="44"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="#007bff"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#0056b3"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#6c757d"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Navigation button style -->
+        <Style x:Key="NavButtonStyle" TargetType="Button" BasedOn="{StaticResource TouchButtonStyle}">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- Task item style -->
+        <Style x:Key="TaskItemStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#dee2e6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="MinHeight" Value="60"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#007bff"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Completed task style -->
+        <Style x:Key="CompletedTaskStyle" TargetType="Border" BasedOn="{StaticResource TaskItemStyle}">
+            <Setter Property="Background" Value="#f8f9fa"/>
+            <Setter Property="BorderBrush" Value="#28a745"/>
+            <Setter Property="Opacity" Value="0.8"/>
+        </Style>
+
+        <!-- Priority indicator styles -->
+        <Style x:Key="PriorityIndicator" TargetType="Border">
+            <Setter Property="Width" Value="4"/>
+            <Setter Property="CornerRadius" Value="2"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header with date navigation -->
+        <Border Grid.Row="0" Background="#f8f9fa" BorderBrush="#dee2e6" BorderThickness="0,0,0,1" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Previous Day Button -->
+                <Button Grid.Column="0" 
+                        Content="◀" 
+                        Command="{Binding PreviousDayCommand}"
+                        Style="{StaticResource NavButtonStyle}"
+                        ToolTip="Previous Day"/>
+
+                <!-- Date Display and Picker -->
+                <StackPanel Grid.Column="1" 
+                           Orientation="Horizontal" 
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SelectedDate, StringFormat='dddd, MMMM dd, yyyy'}" 
+                               FontSize="20" 
+                               FontWeight="Bold"
+                               Foreground="#212529"
+                               VerticalAlignment="Center"
+                               Margin="0,0,16,0"/>
+                    <DatePicker SelectedDate="{Binding SelectedDate, UpdateSourceTrigger=PropertyChanged}"
+                               MinHeight="44"
+                               FontSize="14"
+                               Margin="8"/>
+                </StackPanel>
+
+                <!-- Next Day Button -->
+                <Button Grid.Column="2" 
+                        Content="▶" 
+                        Command="{Binding NextDayCommand}"
+                        Style="{StaticResource NavButtonStyle}"
+                        ToolTip="Next Day"
+                        Margin="8,0"/>
+
+                <!-- Today Button -->
+                <Button Grid.Column="3" 
+                        Content="Today" 
+                        Command="{Binding TodayCommand}"
+                        Style="{StaticResource TouchButtonStyle}"
+                        Background="#28a745"
+                        MinWidth="80"/>
+            </Grid>
+        </Border>
+
+        <!-- Tasks for selected day -->
+        <ScrollViewer Grid.Row="1" 
+                      VerticalScrollBarVisibility="Auto"
+                      IsManipulationEnabled="True"
+                      Padding="16">
+            <StackPanel>
+                <!-- Day summary -->
+                <Border Background="#e3f2fd" 
+                        BorderBrush="#2196f3" 
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="16" 
+                        Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding DayTasksSummary}" 
+                                       FontSize="16" 
+                                       FontWeight="SemiBold"
+                                       Foreground="#1976d2"/>
+                            <TextBlock Text="{Binding CompletionSummary}" 
+                                       FontSize="14" 
+                                       Foreground="#424242"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <ProgressBar Grid.Column="1" 
+                                    Value="{Binding DayCompletionPercentage}" 
+                                    Maximum="100"
+                                    Width="100" 
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Margin="16,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- Task list for the day -->
+                <ItemsControl ItemsSource="{Binding DayTasks}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Tag="{Binding}" MouseLeftButtonDown="OnTaskClick">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource TaskItemStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Status}" Value="Completed">
+                                                <Setter Property="Background" Value="#f8f9fa"/>
+                                                <Setter Property="BorderBrush" Value="#28a745"/>
+                                                <Setter Property="Opacity" Value="0.8"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Priority indicator -->
+                                    <Border Grid.Column="0" Style="{StaticResource PriorityIndicator}">
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource PriorityIndicator}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="Critical">
+                                                        <Setter Property="Background" Value="#dc3545"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="High">
+                                                        <Setter Property="Background" Value="#ffc107"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="Normal">
+                                                        <Setter Property="Background" Value="#6c757d"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="Low">
+                                                        <Setter Property="Background" Value="#17a2b8"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+
+                                    <!-- Task content -->
+                                    <StackPanel Grid.Column="1" Margin="12,0">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontSize="16" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#212529"
+                                                   TextWrapping="Wrap"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" Margin="0,4">
+                                            <TextBlock Text="{Binding Category}" 
+                                                       FontSize="12"
+                                                       Foreground="White"
+                                                       Background="#6c757d"
+                                                       Padding="4,2"
+                                                       Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding Assignee}" 
+                                                       FontSize="12"
+                                                       Foreground="#495057"
+                                                       Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding EstimatedHours, StringFormat='{}{0}h estimated'}" 
+                                                       FontSize="12"
+                                                       Foreground="#495057"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="{Binding Description}" 
+                                                   FontSize="14" 
+                                                   Foreground="#6c757d"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,4,0,0"
+                                                   Visibility="{Binding Description, Converter={x:Static local:StringToVisibilityConverter.Instance}}"/>
+                                    </StackPanel>
+
+                                    <!-- Task status and actions -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Button Content="{Binding StatusButtonText}"
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.ToggleTaskStatusCommand}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource TouchButtonStyle}"
+                                                MinWidth="80"
+                                                Margin="0,0,0,8">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource TouchButtonStyle}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Completed">
+                                                            <Setter Property="Background" Value="#28a745"/>
+                                                            <Setter Property="Content" Value="✓ Done"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="InProgress">
+                                                            <Setter Property="Background" Value="#ffc107"/>
+                                                            <Setter Property="Content" Value="In Progress"/>
+                                                            <Setter Property="Foreground" Value="#212529"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="NotStarted">
+                                                            <Setter Property="Background" Value="#6c757d"/>
+                                                            <Setter Property="Content" Value="Start"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <TextBlock Text="{Binding Progress, StringFormat='{}{0}%'}" 
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="#495057"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- No tasks message -->
+                <Border Visibility="{Binding HasDayTasks, Converter={x:Static local:BoolToVisibilityConverter.InverseInstance}}"
+                        Style="{StaticResource TaskItemStyle}"
+                        Background="#f8f9fa"
+                        HorizontalAlignment="Center"
+                        Margin="0,32">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="📅" 
+                                   FontSize="48" 
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,16"/>
+                        <TextBlock Text="No tasks scheduled for this day" 
+                                   FontSize="16" 
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Foreground="#6c757d"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="Use the Gantt chart to schedule tasks for specific days" 
+                                   FontSize="14" 
+                                   HorizontalAlignment="Center"
+                                   Foreground="#6c757d"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer with day navigation shortcuts -->
+        <Border Grid.Row="2" Background="#f8f9fa" BorderBrush="#dee2e6" BorderThickness="0,1,0,0" Padding="16">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Yesterday" 
+                        Command="{Binding PreviousDayCommand}"
+                        Style="{StaticResource TouchButtonStyle}"
+                        Background="#6c757d"
+                        Margin="0,0,8,0"/>
+                <Button Content="Today" 
+                        Command="{Binding TodayCommand}"
+                        Style="{StaticResource TouchButtonStyle}"
+                        Background="#28a745"
+                        Margin="0,0,8,0"/>
+                <Button Content="Tomorrow" 
+                        Command="{Binding NextDayCommand}"
+                        Style="{StaticResource TouchButtonStyle}"
+                        Background="#6c757d"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

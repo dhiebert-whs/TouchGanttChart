@@ -17,7 +17,7 @@
     
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-        
+        <local:InvertBooleanToVisibilityConverter x:Key="InvertBoolToVisConverter"/>
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         
         <!-- Touch-optimized button style -->
@@ -175,8 +175,10 @@
                               Margin="8,0,8,16"/>
                     
                     <!-- Progress -->
-                    <Label Content="Progress (%)" Style="{StaticResource TouchLabelStyle}"/>
-                    <Grid Margin="8,0,8,16">
+                    <Label Content="{Binding ProgressLabel}" Style="{StaticResource TouchLabelStyle}"/>
+                    
+                    <!-- Editable Progress (for leaf tasks) -->
+                    <Grid Margin="8,0,8,16" Visibility="{Binding IsProgressEditable, Converter={StaticResource BoolToVisConverter}}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -197,6 +199,34 @@
                                    Margin="8,0,0,0"
                                    VerticalAlignment="Center"/>
                     </Grid>
+                    
+                    <!-- Read-only Calculated Progress (for parent tasks) -->
+                    <Border Margin="8,0,8,16" 
+                            Visibility="{Binding IsProgressEditable, Converter={StaticResource InvertBoolToVisConverter}}"
+                            Background="#f8f9fa"
+                            BorderBrush="#dee2e6"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ProgressBar Grid.Column="0"
+                                        Value="{Binding EffectiveProgress}"
+                                        Maximum="100"
+                                        MinHeight="20"
+                                        VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding EffectiveProgress, StringFormat={}{0}%}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="#495057"/>
+                        </Grid>
+                    </Border>
                     
                     <!-- Assignee -->
                     <Label Content="Assignee" Style="{StaticResource TouchLabelStyle}"/>
