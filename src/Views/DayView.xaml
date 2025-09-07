@@ -192,7 +192,7 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Priority indicator -->
-                                    <Border Grid.Column="0" Style="{StaticResource PriorityIndicator}">
+                                    <Border Grid.Column="0">
                                         <Border.Style>
                                             <Style TargetType="Border" BasedOn="{StaticResource PriorityIndicator}">
                                                 <Style.Triggers>
@@ -250,7 +250,6 @@
                                         <Button Content="{Binding StatusButtonText}"
                                                 Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.ToggleTaskStatusCommand}"
                                                 CommandParameter="{Binding}"
-                                                Style="{StaticResource TouchButtonStyle}"
                                                 MinWidth="80"
                                                 Margin="0,0,0,8">
                                             <Button.Style>

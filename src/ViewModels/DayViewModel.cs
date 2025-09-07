@@ -48,8 +48,8 @@ public partial class DayViewModel : ViewModelBase
             var total = DayTasks.Count;
             if (total == 0) return "No tasks scheduled";
             
-            var completed = DayTasks.Count(t => t.Status == TaskStatus.Completed);
-            var inProgress = DayTasks.Count(t => t.Status == TaskStatus.InProgress);
+            var completed = DayTasks.Count(t => t.Status == Models.TaskStatus.Completed);
+            var inProgress = DayTasks.Count(t => t.Status == Models.TaskStatus.InProgress);
             
             if (completed == total) return $"All {total} tasks completed! 🎉";
             if (inProgress > 0) return $"{total} tasks: {completed} done, {inProgress} in progress";
@@ -67,7 +67,7 @@ public partial class DayViewModel : ViewModelBase
             if (DayTasks.Count == 0) return "Ready for new tasks";
             
             var totalHours = DayTasks.Sum(t => t.EstimatedHours);
-            var completedHours = DayTasks.Where(t => t.Status == TaskStatus.Completed).Sum(t => t.EstimatedHours);
+            var completedHours = DayTasks.Where(t => t.Status == Models.TaskStatus.Completed).Sum(t => t.EstimatedHours);
             
             return $"{completedHours:F1} / {totalHours:F1} hours completed";
         }
@@ -83,7 +83,7 @@ public partial class DayViewModel : ViewModelBase
             if (DayTasks.Count == 0) return 0;
             
             var totalTasks = DayTasks.Count;
-            var completedTasks = DayTasks.Count(t => t.Status == TaskStatus.Completed);
+            var completedTasks = DayTasks.Count(t => t.Status == Models.TaskStatus.Completed);
             
             return Math.Round((double)completedTasks / totalTasks * 100, 1);
         }
@@ -182,27 +182,27 @@ public partial class DayViewModel : ViewModelBase
         // Cycle through statuses: NotStarted -> InProgress -> Completed
         task.Status = task.Status switch
         {
-            TaskStatus.NotStarted => TaskStatus.InProgress,
-            TaskStatus.InProgress => TaskStatus.Completed,
-            TaskStatus.Completed => TaskStatus.NotStarted,
-            _ => TaskStatus.InProgress
+            Models.TaskStatus.NotStarted => Models.TaskStatus.InProgress,
+            Models.TaskStatus.InProgress => Models.TaskStatus.Completed,
+            Models.TaskStatus.Completed => Models.TaskStatus.NotStarted,
+            _ => Models.TaskStatus.InProgress
         };
 
         // Update progress based on status
         task.Progress = task.Status switch
         {
-            TaskStatus.NotStarted => 0,
-            TaskStatus.InProgress => Math.Max(task.Progress, 1), // At least 1% if in progress
-            TaskStatus.Completed => 100,
+            Models.TaskStatus.NotStarted => 0,
+            Models.TaskStatus.InProgress => Math.Max(task.Progress, 1), // At least 1% if in progress
+            Models.TaskStatus.Completed => 100,
             _ => task.Progress
         };
 
         // Set completion date if completed
-        if (task.Status == TaskStatus.Completed && originalStatus != TaskStatus.Completed)
+        if (task.Status == Models.TaskStatus.Completed && originalStatus != Models.TaskStatus.Completed)
         {
             task.CompletionDate = DateTime.Now;
         }
-        else if (task.Status != TaskStatus.Completed)
+        else if (task.Status != Models.TaskStatus.Completed)
         {
             task.CompletionDate = null;
         }
@@ -216,7 +216,7 @@ public partial class DayViewModel : ViewModelBase
                 task.Name, originalStatus, task.Status);
 
             // If task completed early, trigger dependency shifting
-            if (task.Status == TaskStatus.Completed && task.IsCompletedEarly)
+            if (task.Status == Models.TaskStatus.Completed && task.IsCompletedEarly)
             {
                 // This would trigger dependency shifting logic
                 _logger.LogInformation("Task {TaskName} completed early, may affect dependencies", task.Name);
