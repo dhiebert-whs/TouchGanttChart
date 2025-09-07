@@ -158,7 +158,7 @@
                                        Margin="0,4,0,0"/>
                         </StackPanel>
                         <ProgressBar Grid.Column="1" 
-                                    Value="{Binding DayCompletionPercentage}" 
+                                    Value="{Binding DayCompletionPercentage, Mode=OneWay}" 
                                     Maximum="100"
                                     Width="100" 
                                     Height="20"

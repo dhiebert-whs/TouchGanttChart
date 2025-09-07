@@ -214,7 +214,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <ProgressBar Grid.Column="0"
-                                        Value="{Binding EffectiveProgress}"
+                                        Value="{Binding EffectiveProgress, Mode=OneWay}"
                                         Maximum="100"
                                         MinHeight="20"
                                         VerticalAlignment="Center"/>

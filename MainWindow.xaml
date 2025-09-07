@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TouchGanttChart"
         xmlns:controls="clr-namespace:TouchGanttChart.Controls"
+        xmlns:views="clr-namespace:TouchGanttChart.Views"
         xmlns:converters="clr-namespace:TouchGanttChart.Converters"
         mc:Ignorable="d"
         Title="{Binding Title}" 
@@ -129,56 +130,80 @@
                     Margin="0,8,8,8" Padding="8"
                     FontSize="16" FontWeight="Bold"
                     ToolTip="Reset Zoom"/>
+
+            <!-- View Toggle -->
+            <Separator Margin="8,0"/>
+            <Button Content="📅 Day View" 
+                    Command="{Binding ShowDayViewCommand}"
+                    MinHeight="44" MinWidth="120"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"
+                    ToolTip="Switch to Day View"/>
+            
+            <Button Content="📊 Gantt View" 
+                    Command="{Binding ShowGanttViewCommand}"
+                    MinHeight="44" MinWidth="120"
+                    Margin="8" Padding="16,12"
+                    FontSize="14" FontWeight="SemiBold"
+                    ToolTip="Switch to Gantt View"/>
             
         </StackPanel>
 
         <!-- Main content area -->
         <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" MinWidth="200"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+            <!-- Gantt View -->
+            <Grid Visibility="{Binding IsGanttViewActive, Converter={StaticResource BoolToVisConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" MinWidth="200"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Task List Panel -->
-            <controls:TaskListPanel Grid.Column="0"
-                                    DataContext="{Binding}"
-                                    SelectedTask="{Binding SelectedTask, Mode=TwoWay}"
-                                    TaskSelected="OnTaskSelected"
-                                    TaskEditRequested="OnTaskEditRequested"
-                                    Background="White"
-                                    BorderBrush="#dee2e6"
-                                    BorderThickness="0,0,1,0"/>
+                <!-- Task List Panel -->
+                <controls:TaskListPanel Grid.Column="0"
+                                        DataContext="{Binding}"
+                                        SelectedTask="{Binding SelectedTask, Mode=TwoWay}"
+                                        TaskSelected="OnTaskSelected"
+                                        TaskEditRequested="OnTaskEditRequested"
+                                        Background="White"
+                                        BorderBrush="#dee2e6"
+                                        BorderThickness="0,0,1,0"/>
 
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1" 
-                          Width="8" 
-                          HorizontalAlignment="Stretch"
-                          Background="#dee2e6"/>
+                <!-- Splitter -->
+                <GridSplitter Grid.Column="1" 
+                              Width="8" 
+                              HorizontalAlignment="Stretch"
+                              Background="#dee2e6"/>
 
-            <!-- Gantt chart area -->
-            <Border Grid.Column="2" 
-                    Background="White">
-                
-                <ScrollViewer x:Name="GanttScrollViewer"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Auto"
-                              IsManipulationEnabled="True">
+                <!-- Gantt chart area -->
+                <Border Grid.Column="2" 
+                        Background="White">
                     
-                    <!-- Gantt Timeline Canvas -->
-                    <controls:GanttTimelineCanvas x:Name="GanttCanvas"
-                                                  Tasks="{Binding Tasks}"
-                                                  TimelineStart="{Binding TimelineStart}"
-                                                  TimelineEnd="{Binding TimelineEnd}"
-                                                  ZoomLevel="{Binding ZoomLevel, Mode=TwoWay}"
-                                                  SelectedTask="{Binding SelectedTask, Mode=TwoWay}"
-                                                  ViewMode="{Binding ViewMode}"
-                                                  Background="White"
-                                                  MinHeight="400"
-                                                  MinWidth="800"/>
-                    
-                </ScrollViewer>
-            </Border>
+                    <ScrollViewer x:Name="GanttScrollViewer"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto"
+                                  IsManipulationEnabled="True">
+                        
+                        <!-- Gantt Timeline Canvas -->
+                        <controls:GanttTimelineCanvas x:Name="GanttCanvas"
+                                                      Tasks="{Binding Tasks}"
+                                                      TimelineStart="{Binding TimelineStart}"
+                                                      TimelineEnd="{Binding TimelineEnd}"
+                                                      ZoomLevel="{Binding ZoomLevel, Mode=TwoWay}"
+                                                      SelectedTask="{Binding SelectedTask, Mode=TwoWay}"
+                                                      ViewMode="{Binding ViewMode}"
+                                                      Background="White"
+                                                      MinHeight="400"
+                                                      MinWidth="800"/>
+                        
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- Day View -->
+            <views:DayView x:Name="DayViewControl"
+                          Visibility="{Binding IsDayViewActive, Converter={StaticResource BoolToVisConverter}}"
+                          DataContext="{Binding DayViewModel}"/>
         </Grid>
 
         <!-- Status bar -->

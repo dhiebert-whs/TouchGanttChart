@@ -47,6 +47,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedTasks = new ObservableCollection<GanttTask>();
         
         InitializeCommands();
+        InitializeDayView();
     }
 
     /// <summary>
@@ -111,6 +112,23 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private bool _isProjectTreeExpanded = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the Gantt view is currently active.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isGanttViewActive = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the Day view is currently active.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isDayViewActive = false;
+
+    /// <summary>
+    /// Gets the Day view model for managing daily task views.
+    /// </summary>
+    public DayViewModel? DayViewModel { get; private set; }
 
     /// <summary>
     /// Gets or sets the search filter text.
@@ -222,6 +240,18 @@ public partial class MainWindowViewModel : ViewModelBase
     private IRelayCommand? _manageDependenciesCommand;
 
     /// <summary>
+    /// Gets the command to show the Day view.
+    /// </summary>
+    [ObservableProperty]
+    private IRelayCommand? _showDayViewCommand;
+
+    /// <summary>
+    /// Gets the command to show the Gantt view.
+    /// </summary>
+    [ObservableProperty]
+    private IRelayCommand? _showGanttViewCommand;
+
+    /// <summary>
     /// Gets the command to change timeline view mode.
     /// </summary>
     [ObservableProperty]
@@ -247,6 +277,8 @@ public partial class MainWindowViewModel : ViewModelBase
         ClearFiltersCommand = new RelayCommand(ClearFilters);
         ManageDependenciesCommand = new AsyncRelayCommand(ManageDependenciesAsync, () => SelectedTask != null);
         ChangeViewModeCommand = new RelayCommand<TimelineViewMode>(ChangeViewMode);
+        ShowDayViewCommand = new RelayCommand(ShowDayView);
+        ShowGanttViewCommand = new RelayCommand(ShowGanttView);
     }
 
     /// <summary>
@@ -281,6 +313,12 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void UpdateCommandStates()
     {
+        if (System.Windows.Application.Current?.Dispatcher?.CheckAccess() == false)
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke(() => UpdateCommandStates());
+            return;
+        }
+
         SaveCommand?.NotifyCanExecuteChanged();
         AddTaskCommand?.NotifyCanExecuteChanged();
         EditTaskCommand?.NotifyCanExecuteChanged();
@@ -769,4 +807,44 @@ public partial class MainWindowViewModel : ViewModelBase
             "Updating task...",
             "Task updated successfully");
     }
+
+    #region View Management
+
+    /// <summary>
+    /// Initializes the Day view model.
+    /// </summary>
+    private void InitializeDayView()
+    {
+        DayViewModel = _serviceProvider.GetService<DayViewModel>();
+    }
+
+    /// <summary>
+    /// Switches to the Day view.
+    /// </summary>
+    private void ShowDayView()
+    {
+        IsDayViewActive = true;
+        IsGanttViewActive = false;
+        
+        // Initialize day view with current project data if available
+        if (DayViewModel != null && SelectedProject != null)
+        {
+            _ = DayViewModel.InitializeAsync(SelectedProject, Tasks);
+        }
+        
+        _logger.LogInformation("Switched to Day view");
+    }
+
+    /// <summary>
+    /// Switches to the Gantt view.
+    /// </summary>
+    private void ShowGanttView()
+    {
+        IsGanttViewActive = true;
+        IsDayViewActive = false;
+        
+        _logger.LogInformation("Switched to Gantt view");
+    }
+
+    #endregion
 }
