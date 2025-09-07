@@ -11,7 +11,8 @@
       "Bash(dotnet tool install:*)",
       "Bash(dotnet ef database:*)",
       "Bash(sqlite3:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
