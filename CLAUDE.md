@@ -64,14 +64,157 @@ dotnet ef database update
 dotnet ef database drop
 ```
 
-## Testing
+## Testing Strategy
 
-Tests are organized in the `tests/` directory with separate projects for unit and integration tests. Use xUnit as the testing framework.
+Tests are organized in the `tests/` directory with separate projects for unit and integration tests. Use xUnit as the testing framework with >80% coverage target.
+
+### Recommended Test Structure
+
+```
+tests/
+├── TouchGanttChart.UnitTests/           # Fast, isolated unit tests
+│   ├── Models/                          # Domain model logic tests
+│   ├── ViewModels/                      # ViewModel behavior tests  
+│   ├── Services/                        # Business logic tests
+│   ├── Extensions/                      # Helper method tests
+│   └── Utilities/                       # Common test utilities
+├── TouchGanttChart.IntegrationTests/    # Database and UI integration tests
+│   ├── Data/                           # EF Core and database tests
+│   ├── Services/                       # Service integration tests
+│   └── E2E/                           # End-to-end workflow tests
+└── TouchGanttChart.UITests/            # WPF UI automation tests
+    ├── Controls/                       # Custom control tests
+    ├── Views/                         # Window and dialog tests
+    └── Interactions/                  # Touch and gesture tests
+```
+
+### Critical Unit Tests
+
+#### Model Layer Tests (`TouchGanttChart.UnitTests/Models/`)
+- **GanttTaskTests.cs**
+  - `CalculatedProgress_WithSubtasks_ReturnsWeightedAverage()`
+  - `Duration_WithValidDates_ReturnsCorrectTimespan()`
+  - `IsOverdue_WithPastEndDate_ReturnsTrue()`
+  - `GetAllDescendants_WithNestedHierarchy_ReturnsAllChildren()`
+  - `HierarchyLevel_WithMultipleLevels_ReturnsCorrectDepth()`
+
+- **ProjectTests.cs**
+  - `CompletionPercentage_WithMixedTaskStatuses_ReturnsCorrectValue()`
+  - `IsWithinBudget_WithTaskCosts_ReturnsAccurateStatus()`
+
+#### ViewModel Layer Tests (`TouchGanttChart.UnitTests/ViewModels/`)
+- **MainWindowViewModelTests.cs**
+  - `ShowDayView_SetsCorrectVisibilityProperties()`
+  - `ShowGanttView_HidesDayViewAndShowsGantt()`
+  - `AddTaskCommand_WithValidProject_CreatesNewTask()`
+  - `DeleteTaskCommand_WithDependencies_HandlesCascadeCorrectly()`
+
+- **DayViewModelTests.cs**
+  - `NextDayCommand_IncrementsSelectedDate()`
+  - `RefreshDayTasks_WithDateRange_ShowsCorrectTasks()`
+  - `ToggleTaskStatus_UpdatesCompletionDate()`
+  - `DayCompletionPercentage_CalculatesCorrectly()`
+
+- **ProjectSelectionViewModelTests.cs**
+  - `DeleteProjectCommand_WithConfirmation_RemovesProject()`
+  - `LoadProjects_FiltersArchivedProjects()`
+
+#### Service Layer Tests (`TouchGanttChart.UnitTests/Services/`)
+- **DataServiceTests.cs**
+  - `GetTasksAsync_WithHierarchy_LoadsDependencies()`
+  - `UpdateTaskAsync_WithDependencies_UpdatesRelatedTasks()`
+  - `DeleteProjectAsync_RemovesAllRelatedData()`
+
+- **PdfExportServiceTests.cs**
+  - `ExportProjectAsync_WithTasks_GeneratesValidPdf()`
+  - `ExportProjectAsync_WithEmptyProject_HandlesGracefully()`
+
+### Critical Integration Tests
+
+#### Database Integration (`TouchGanttChart.IntegrationTests/Data/`)
+- **AppDbContextTests.cs**
+  - `SeedData_CreatesRealisticFRCProject()`
+  - `TaskDependencies_MaintainReferentialIntegrity()`
+  - `CompletionDateMigration_AddsColumnCorrectly()`
+
+- **RepositoryTests.cs**
+  - `GetProjectWithTasks_IncludesDependencies()`
+  - `DeleteProject_CascadesCorrectly()`
+
+#### Service Integration (`TouchGanttChart.IntegrationTests/Services/`)
+- **DataServiceIntegrationTests.cs**
+  - `CreateProject_FromTemplate_CreatesAllTasksAndDependencies()`
+  - `TaskCompletion_ShiftsDependentTasks()`
+
+### UI Automation Tests
+
+#### Control Tests (`TouchGanttChart.UITests/Controls/`)
+- **GanttTimelineCanvasTests.cs**
+  - `DragTask_UpdatesDateAndDatabase()`
+  - `DrawDependencyLines_RendersCorrectArrows()`
+  - `TouchPanZoom_UpdatesViewport()`
+
+#### View Tests (`TouchGanttChart.UITests/Views/`)
+- **MainWindowTests.cs**
+  - `ViewSwitching_TogglesCorrectly()`
+  - `TaskDoubleClick_OpensEditDialog()`
+
+- **DayViewTests.cs**
+  - `NavigationButtons_ChangeSelectedDate()`
+  - `TasksSpanningDays_AppearOnAllDays()`
+
+#### Dialog Tests (`TouchGanttChart.UITests/Views/`)
+- **TaskEditDialogTests.cs**
+  - `DialogMoveable_AndCloseable()`
+  - `DropdownsPopulated_WithCorrectValues()`
+
+- **ProjectSelectionDialogTests.cs**
+  - `DeleteButton_ShowsConfirmation()`
+  - `ProjectCards_SelectCorrectly()`
+
+### Performance Tests
+
+#### Load Tests (`TouchGanttChart.IntegrationTests/Performance/`)
+- **ScalabilityTests.cs**
+  - `RenderTimeline_With1000Tasks_Under100ms()`
+  - `CalculateHierarchy_With10Levels_PerformsWell()`
+
+### Touch Gesture Tests
+
+#### Interaction Tests (`TouchGanttChart.UITests/Interactions/`)
+- **TouchGestureTests.cs**
+  - `PinchZoom_UpdatesZoomLevel()`
+  - `TouchDrag_MovesTaskBars()`
+  - `TwoFingerPan_ScrollsTimeline()`
+
+### Test Implementation Recommendations
+
+#### Essential Test Patterns
+1. **AAA Pattern**: Arrange, Act, Assert for clear test structure
+2. **Builder Pattern**: For complex test data creation
+3. **Mock Services**: Use Moq for service dependencies
+4. **In-Memory Database**: For fast integration tests
+5. **Test Fixtures**: For shared test setup/teardown
+
+#### Key Testing Libraries
+- **xUnit**: Primary testing framework
+- **FluentAssertions**: Readable assertions
+- **Moq**: Mocking framework
+- **Microsoft.EntityFrameworkCore.InMemory**: In-memory database
+- **FakeItEasy**: Alternative mocking (if preferred)
+- **AutoFixture**: Test data generation
+
+#### Coverage Targets
+- **Models**: >95% (pure logic, easy to test)
+- **ViewModels**: >85% (command and property logic)
+- **Services**: >90% (business logic critical)
+- **Views**: >60% (UI testing more complex)
+- **Overall**: >80% total coverage
 
 ## Current Development Status (Updated: 2025-09-07)
 
-### ✅ **COMPLETED** - Core Foundation & Advanced Hierarchical Features
-**Full-Featured Gantt Chart Application with Advanced Hierarchy - PRODUCTION READY**
+### ✅ **COMPLETED** - Production-Ready Gantt Chart with All Critical Issues Resolved
+**Full-Featured Touch-Optimized Gantt Chart Application - FULLY FUNCTIONAL**
 
 #### Infrastructure Setup ✅ COMPLETE
 - ✅ Database Layer: Entity Framework Core with GanttTask, Project, ProjectTemplate models
@@ -140,9 +283,20 @@ Tests are organized in the `tests/` directory with separate projects for unit an
 #### Day View Features ✅ COMPLETE
 - ✅ **Date Navigation**: Previous/Next day buttons with date picker integration
 - ✅ **Task Filtering**: Shows only tasks that intersect with selected date
+- ✅ **Date Range Display**: Tasks spanning multiple days appear on ALL days in range
 - ✅ **Progress Summaries**: Daily completion statistics and hour tracking
 - ✅ **Status Management**: Quick task status toggling with completion date tracking
 - ✅ **Priority Sorting**: Tasks sorted by priority (Critical → High → Normal → Low)
+- ✅ **Functional Navigation**: All day view buttons working correctly
+
+#### Critical Issues Resolution ✅ COMPLETE (September 2025)
+- ✅ **View Switching**: Fixed Day View overlapping Gantt chart with proper z-index layering
+- ✅ **Dialog UX**: All pop-up dialogs now moveable and closeable with standard window chrome
+- ✅ **Database Schema**: Added CompletionDate column with proper migration
+- ✅ **Dependency Injection**: Fixed service scope issues (Singleton → Scoped pattern)
+- ✅ **Task Dependencies**: Realistic FRC robotics dependencies with visual arrow indicators
+- ✅ **Project Management**: Enhanced with delete functionality and confirmation dialogs
+- ✅ **Sample Data**: 3-level FRC hierarchy with cross-team dependencies (Mechanical → Electrical → Programming)
 
 ### ✅ **ALL ADVANCED REQUIREMENTS MET**
 
