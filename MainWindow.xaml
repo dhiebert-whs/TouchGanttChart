@@ -22,6 +22,8 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <converters:TimelineViewModeDisplayConverter x:Key="TimelineViewModeDisplayConverter"/>
         <converters:TimelineViewModeIconConverter x:Key="TimelineViewModeIconConverter"/>
+        <converters:MainViewModeDisplayConverter x:Key="MainViewModeDisplayConverter"/>
+        <converters:MainViewModeIconConverter x:Key="MainViewModeIconConverter"/>
     </Window.Resources>
     
     <Grid>
@@ -32,10 +34,10 @@
         </Grid.RowDefinitions>
 
         <!-- Touch-optimized toolbar -->
-        <StackPanel Grid.Row="0" 
-                    Orientation="Horizontal" 
-                    Background="#f8f9fa"
-                    Margin="0,0,0,8">
+        <WrapPanel Grid.Row="0" 
+                   Orientation="Horizontal" 
+                   Background="#f8f9fa"
+                   Margin="0,0,0,8">
             
             <Button Content="New Project" 
                     Command="{Binding NewProjectCommand}"
@@ -131,28 +133,59 @@
                     FontSize="16" FontWeight="Bold"
                     ToolTip="Reset Zoom"/>
 
-            <!-- View Toggle -->
+            <!-- View Selection Dropdown -->
             <Separator Margin="8,0"/>
-            <Button Content="📅 Day View" 
-                    Command="{Binding ShowDayViewCommand}"
-                    MinHeight="44" MinWidth="120"
-                    Margin="8" Padding="16,12"
-                    FontSize="14" FontWeight="SemiBold"
-                    ToolTip="Switch to Day View"/>
+            <TextBlock Text="View:" 
+                       VerticalAlignment="Center" 
+                       FontWeight="SemiBold"
+                       Margin="8,0,4,0"/>
             
-            <Button Content="📊 Gantt View" 
-                    Command="{Binding ShowGanttViewCommand}"
-                    MinHeight="44" MinWidth="120"
-                    Margin="8" Padding="16,12"
-                    FontSize="14" FontWeight="SemiBold"
-                    ToolTip="Switch to Gantt View"/>
+            <ComboBox ItemsSource="{Binding MainViewOptions}"
+                      SelectedItem="{Binding CurrentMainView}"
+                      MinHeight="44" MinWidth="160"
+                      Margin="4,8,8,8" Padding="12,8"
+                      FontSize="14">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Converter={StaticResource MainViewModeIconConverter}}" 
+                                       FontSize="14" 
+                                       Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding Converter={StaticResource MainViewModeDisplayConverter}}" 
+                                       FontSize="14"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
             
-        </StackPanel>
+            <!-- Date Navigation for Gantt Views -->
+            <Separator Margin="8,0"/>
+            <TextBlock Text="Go to Date:" 
+                       VerticalAlignment="Center" 
+                       FontWeight="SemiBold"
+                       Margin="8,0,4,0"/>
+            
+            <DatePicker SelectedDate="{Binding GanttNavigationDate}"
+                        MinHeight="44" MinWidth="140"
+                        Margin="4,8,4,8"
+                        FontSize="14"/>
+            
+            <Button Content="📅 Today" 
+                    Command="{Binding GoToTodayCommand}"
+                    MinHeight="44" MinWidth="80"
+                    Margin="4,8,8,8" Padding="12,8"
+                    FontSize="14" FontWeight="SemiBold"
+                    Background="#28a745"
+                    Foreground="White"
+                    ToolTip="Jump to Today's Date"/>
+            
+        </WrapPanel>
 
         <!-- Main content area -->
         <Grid Grid.Row="1">
             <!-- Gantt View -->
-            <Grid Visibility="{Binding IsGanttViewActive, Converter={StaticResource BoolToVisConverter}}">
+            <Grid Name="GanttViewContainer" 
+                  Visibility="{Binding IsGanttViewActive, Converter={StaticResource BoolToVisConverter}}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="300" MinWidth="200"/>
                     <ColumnDefinition Width="Auto"/>
@@ -191,6 +224,7 @@
                                                       TimelineEnd="{Binding TimelineEnd}"
                                                       ZoomLevel="{Binding ZoomLevel, Mode=TwoWay}"
                                                       SelectedTask="{Binding SelectedTask, Mode=TwoWay}"
+                                                      HighlightedTaskChain="{Binding HighlightedTaskChain}"
                                                       ViewMode="{Binding ViewMode}"
                                                       Background="White"
                                                       MinHeight="400"
@@ -201,10 +235,12 @@
             </Grid>
 
             <!-- Day View -->
-            <views:DayView x:Name="DayViewControl"
-                          Visibility="{Binding IsDayViewActive, Converter={StaticResource BoolToVisConverter}}"
-                          DataContext="{Binding DayViewModel}"
-                          Grid.ZIndex="1"/>
+            <Border Name="DayViewContainer" 
+                    Background="White"
+                    Visibility="{Binding IsDayViewActive, Converter={StaticResource BoolToVisConverter}}">
+                <views:DayView x:Name="DayViewControl"
+                              DataContext="{Binding DayViewModel}"/>
+            </Border>
         </Grid>
 
         <!-- Status bar -->

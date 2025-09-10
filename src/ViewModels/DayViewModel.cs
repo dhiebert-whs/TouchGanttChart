@@ -245,13 +245,40 @@ public partial class DayViewModel : ViewModelBase
             
             // Filter tasks that fall on the selected date
             var selectedDate = SelectedDate.Date;
+            
+            _logger.LogDebug("Refreshing tasks for {Date}. Total available tasks: {TotalTasks}", 
+                selectedDate.ToShortDateString(), AllTasks.Count);
+            
+            // Debug: Log first few tasks with their dates
+            if (AllTasks.Count > 0)
+            {
+                _logger.LogDebug("Sample task dates:");
+                foreach (var task in AllTasks.Take(3))
+                {
+                    _logger.LogDebug("  {TaskName}: {StartDate} to {EndDate}", 
+                        task.Name, task.StartDate.ToShortDateString(), task.EndDate.ToShortDateString());
+                }
+            }
+            
             var tasksForDay = AllTasks.Where(task =>
-                task.StartDate.Date <= selectedDate && task.EndDate.Date >= selectedDate)
-                .OrderBy(t => t.Priority == TaskPriority.Critical ? 0 : 
-                             t.Priority == TaskPriority.High ? 1 :
-                             t.Priority == TaskPriority.Normal ? 2 : 3)
-                .ThenBy(t => t.StartDate)
-                .ThenBy(t => t.Name);
+            {
+                var startDate = task.StartDate.Date;
+                var endDate = task.EndDate.Date;
+                var matches = startDate <= selectedDate && endDate >= selectedDate;
+                
+                if (matches)
+                {
+                    _logger.LogDebug("Task {TaskName} matches {Date} (spans {StartDate} to {EndDate})", 
+                        task.Name, selectedDate.ToShortDateString(), startDate.ToShortDateString(), endDate.ToShortDateString());
+                }
+                
+                return matches;
+            })
+            .OrderBy(t => t.Priority == TaskPriority.Critical ? 0 : 
+                         t.Priority == TaskPriority.High ? 1 :
+                         t.Priority == TaskPriority.Normal ? 2 : 3)
+            .ThenBy(t => t.StartDate)
+            .ThenBy(t => t.Name);
 
             foreach (var task in tasksForDay)
             {
@@ -266,7 +293,7 @@ public partial class DayViewModel : ViewModelBase
 
             SetStatus($"Showing {DayTasks.Count} tasks for {SelectedDate:dddd, MMM dd}");
             
-            _logger.LogDebug("Refreshed day tasks for {Date}: {TaskCount} tasks found", 
+            _logger.LogInformation("Refreshed day tasks for {Date}: {TaskCount} tasks found", 
                 SelectedDate.ToShortDateString(), DayTasks.Count);
         }
         catch (Exception ex)

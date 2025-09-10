@@ -314,7 +314,7 @@
                                 </Border>
                                 
                                 <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:ProjectTemplateSelectionDialog}, Path=DataContext.SelectedTemplate}" Value="{Binding}">
+                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                         <Setter TargetName="TemplateCard" Property="Style" Value="{StaticResource SelectedTemplateCardStyle}"/>
                                     </DataTrigger>
                                 </DataTemplate.Triggers>

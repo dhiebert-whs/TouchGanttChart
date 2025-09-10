@@ -131,6 +131,73 @@ public partial class MainWindowViewModel : ViewModelBase
     public DayViewModel? DayViewModel { get; private set; }
 
     /// <summary>
+    /// Gets or sets the current main view mode.
+    /// </summary>
+    [ObservableProperty]
+    private MainViewMode _currentMainView = MainViewMode.GanttView;
+
+    /// <summary>
+    /// Gets the available main view options.
+    /// </summary>
+    public MainViewMode[] MainViewOptions => MainViewConfig.GetAllModes();
+
+    /// <summary>
+    /// Gets or sets the date for Gantt navigation.
+    /// </summary>
+    [ObservableProperty]
+    private DateTime _ganttNavigationDate = DateTime.Today;
+
+    /// <summary>
+    /// Gets or sets the collection of tasks that are currently highlighted in the task chain.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<GanttTask> _highlightedTaskChain = new();
+
+    /// <summary>
+    /// Called when the CurrentMainView property changes.
+    /// </summary>
+    partial void OnCurrentMainViewChanged(MainViewMode value)
+    {
+        UpdateViewVisibility();
+    }
+
+    /// <summary>
+    /// Updates the visibility of views based on the current main view mode.
+    /// </summary>
+    private void UpdateViewVisibility()
+    {
+        switch (CurrentMainView)
+        {
+            case MainViewMode.GanttView:
+                IsGanttViewActive = true;
+                IsDayViewActive = false;
+                // Set Gantt to show full project timeline
+                if (DayViewModel?.SelectedDate != null)
+                {
+                    TimelineStart = SelectedProject?.StartDate ?? DateTime.Today.AddDays(-30);
+                    TimelineEnd = SelectedProject?.EndDate ?? DateTime.Today.AddDays(90);
+                }
+                break;
+            case MainViewMode.DailyTodo:
+                IsGanttViewActive = false;
+                IsDayViewActive = true;
+                break;
+            case MainViewMode.DailyGantt:
+                IsGanttViewActive = true;
+                IsDayViewActive = false;
+                // Set Gantt to show single day with hourly detail
+                if (DayViewModel?.SelectedDate != null)
+                {
+                    var selectedDay = DayViewModel.SelectedDate.Date;
+                    TimelineStart = selectedDay;
+                    TimelineEnd = selectedDay.AddDays(1);
+                    ViewMode = TimelineViewMode.Daily; // Use daily view mode for hourly detail
+                }
+                break;
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the search filter text.
     /// </summary>
     [ObservableProperty]
@@ -258,6 +325,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private IRelayCommand<TimelineViewMode>? _changeViewModeCommand;
 
     /// <summary>
+    /// Gets the command to navigate to today's date in the Gantt view.
+    /// </summary>
+    [ObservableProperty]
+    private IRelayCommand? _goToTodayCommand;
+
+    /// <summary>
     /// Initializes all relay commands.
     /// </summary>
     private void InitializeCommands()
@@ -279,6 +352,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ChangeViewModeCommand = new RelayCommand<TimelineViewMode>(ChangeViewMode);
         ShowDayViewCommand = new RelayCommand(ShowDayView);
         ShowGanttViewCommand = new RelayCommand(ShowGanttView);
+        GoToTodayCommand = new RelayCommand(GoToToday);
     }
 
     /// <summary>
@@ -844,6 +918,63 @@ public partial class MainWindowViewModel : ViewModelBase
         IsDayViewActive = false;
         
         _logger.LogInformation("Switched to Gantt view");
+    }
+
+    /// <summary>
+    /// Navigates to today's date in the Gantt view.
+    /// </summary>
+    private void GoToToday()
+    {
+        GanttNavigationDate = DateTime.Today;
+    }
+
+    /// <summary>
+    /// Called when the GanttNavigationDate property changes.
+    /// </summary>
+    partial void OnGanttNavigationDateChanged(DateTime value)
+    {
+        // Update DayViewModel's selected date if available
+        if (DayViewModel != null)
+        {
+            DayViewModel.SelectedDate = value;
+        }
+
+        // If in Daily Gantt mode, update timeline to show selected day
+        if (CurrentMainView == MainViewMode.DailyGantt)
+        {
+            TimelineStart = value.Date;
+            TimelineEnd = value.Date.AddDays(1);
+        }
+        
+        // For regular Gantt view, center timeline around selected date
+        else if (CurrentMainView == MainViewMode.GanttView)
+        {
+            var span = TimeSpan.FromDays((TimelineEnd - TimelineStart).TotalDays);
+            TimelineStart = value.AddDays(-span.TotalDays / 2);
+            TimelineEnd = value.AddDays(span.TotalDays / 2);
+        }
+    }
+
+    /// <summary>
+    /// Called when the SelectedTask property changes to update task chain highlighting.
+    /// </summary>
+    partial void OnSelectedTaskChanged(GanttTask? value)
+    {
+        // Clear previous highlighting
+        HighlightedTaskChain.Clear();
+        
+        // If a task is selected, highlight its entire chain
+        if (value != null)
+        {
+            var chain = value.GetTaskChain();
+            foreach (var task in chain)
+            {
+                HighlightedTaskChain.Add(task);
+            }
+            
+            _logger.LogDebug("Highlighted task chain for {TaskName}: {ChainCount} tasks", 
+                value.Name, HighlightedTaskChain.Count);
+        }
     }
 
     #endregion

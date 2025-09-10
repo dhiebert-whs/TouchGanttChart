@@ -243,6 +243,84 @@ public class GanttTask
     }
 
     /// <summary>
+    /// Gets a user-friendly description of the task's hierarchy level.
+    /// </summary>
+    public string HierarchyLevelDescription
+    {
+        get
+        {
+            return HierarchyLevel switch
+            {
+                0 => "Primary Task",
+                1 => "1st Level Subtask",
+                2 => "2nd Level Subtask", 
+                3 => "3rd Level Subtask",
+                _ => $"{HierarchyLevel}th Level Subtask"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Gets a visual indicator for the task's hierarchy level.
+    /// </summary>
+    public string HierarchyLevelIndicator
+    {
+        get
+        {
+            return HierarchyLevel switch
+            {
+                0 => "◉", // Primary task
+                1 => "◎", // 1st level subtask
+                2 => "○", // 2nd level subtask  
+                3 => "◦", // 3rd level subtask
+                _ => "·"  // Deeper levels
+            };
+        }
+    }
+
+    /// <summary>
+    /// Gets all tasks in the same hierarchical chain (parent and all descendants).
+    /// </summary>
+    public IEnumerable<GanttTask> GetTaskChain()
+    {
+        var chain = new HashSet<GanttTask>();
+        
+        // Add the root task and all its ancestors
+        var root = GetRootTask();
+        AddTaskAndDescendants(root, chain);
+        
+        return chain;
+    }
+
+    /// <summary>
+    /// Gets the root task of this task's hierarchy.
+    /// </summary>
+    public GanttTask GetRootTask()
+    {
+        var current = this;
+        while (current.ParentTask != null)
+        {
+            current = current.ParentTask;
+        }
+        return current;
+    }
+
+    /// <summary>
+    /// Recursively adds a task and all its descendants to the collection.
+    /// </summary>
+    private void AddTaskAndDescendants(GanttTask task, HashSet<GanttTask> collection)
+    {
+        collection.Add(task);
+        if (task.SubTasks != null)
+        {
+            foreach (var subtask in task.SubTasks)
+            {
+                AddTaskAndDescendants(subtask, collection);
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets the calculated progress for parent tasks based on subtask completion.
     /// For leaf tasks, returns the manually set progress.
     /// </summary>

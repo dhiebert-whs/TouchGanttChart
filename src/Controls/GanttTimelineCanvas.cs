@@ -59,7 +59,7 @@ public class GanttTimelineCanvas : Canvas
         MouseLeftButtonDown += OnMouseLeftButtonDown;
         MouseMove += OnMouseMove;
         MouseLeftButtonUp += OnMouseLeftButtonUp;
-        MouseWheel += OnMouseWheel;
+        // MouseWheel removed - zoom only via buttons
         
         SizeChanged += OnSizeChanged;
     }
@@ -96,6 +96,11 @@ public class GanttTimelineCanvas : Canvas
             typeof(GanttTimelineCanvas),
             new PropertyMetadata(TimelineViewMode.Weekly, OnViewModeChanged));
 
+    public static readonly DependencyProperty HighlightedTaskChainProperty =
+        DependencyProperty.Register(nameof(HighlightedTaskChain), typeof(ObservableCollection<GanttTask>), 
+            typeof(GanttTimelineCanvas),
+            new PropertyMetadata(null, OnHighlightedTaskChainChanged));
+
     public ObservableCollection<GanttTask>? Tasks
     {
         get => (ObservableCollection<GanttTask>?)GetValue(TasksProperty);
@@ -130,6 +135,12 @@ public class GanttTimelineCanvas : Canvas
     {
         get => (TimelineViewMode)GetValue(ViewModeProperty);
         set => SetValue(ViewModeProperty, value);
+    }
+
+    public ObservableCollection<GanttTask>? HighlightedTaskChain
+    {
+        get => (ObservableCollection<GanttTask>?)GetValue(HighlightedTaskChainProperty);
+        set => SetValue(HighlightedTaskChainProperty, value);
     }
 
     #endregion
@@ -201,9 +212,24 @@ public class GanttTimelineCanvas : Canvas
         }
     }
 
+    private static void OnHighlightedTaskChainChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GanttTimelineCanvas canvas)
+        {
+            canvas.RedrawTimeline();
+        }
+    }
+
     private void OnTasksCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        RedrawTimeline();
+        if (Dispatcher.CheckAccess())
+        {
+            RedrawTimeline();
+        }
+        else
+        {
+            Dispatcher.BeginInvoke(RedrawTimeline);
+        }
     }
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -690,12 +716,7 @@ public class GanttTimelineCanvas : Canvas
         ReleaseMouseCapture();
     }
 
-    private void OnMouseWheel(object sender, MouseWheelEventArgs e)
-    {
-        var zoomFactor = e.Delta > 0 ? 1.1 : 0.9;
-        var newZoom = ZoomLevel * zoomFactor;
-        ZoomLevel = Math.Max(0.1, Math.Min(5.0, newZoom));
-    }
+    // MouseWheel zoom removed - zoom only via buttons in toolbar
 
     private void OnTaskBarMouseDown(GanttTask task, Border container, MouseButtonEventArgs e)
     {
@@ -930,7 +951,11 @@ public class GanttTimelineCanvas : Canvas
         var totalDays = (TimelineEnd - TimelineStart).TotalDays;
         var taskCount = Tasks?.Count ?? 0;
         
-        Width = Math.Max(ActualWidth, totalDays * ZoomLevel * 2);
+        // Calculate required width based on timeline and zoom - use proper scaling
+        var pixelsPerDay = ZoomLevel * 40; // 40 pixels per day at 1.0 zoom
+        var requiredWidth = Math.Max(800, totalDays * pixelsPerDay);
+        Width = requiredWidth;
+        MinWidth = requiredWidth;
         
         // Calculate height based on categories and tasks
         if (Tasks != null && Tasks.Count > 0)
@@ -939,12 +964,18 @@ public class GanttTimelineCanvas : Canvas
             var totalHeight = TIMELINE_HEADER_HEIGHT + 
                              (categoryCount * (CATEGORY_HEADER_HEIGHT + CATEGORY_SPACING * 2)) + 
                              (taskCount * TASK_ROW_HEIGHT) + 20;
-            Height = Math.Max(ActualHeight, totalHeight);
+            Height = Math.Max(400, totalHeight);
+            MinHeight = Math.Max(400, totalHeight);
         }
         else
         {
-            Height = Math.Max(ActualHeight, TIMELINE_HEADER_HEIGHT + 100);
+            Height = Math.Max(400, TIMELINE_HEADER_HEIGHT + 100);
+            MinHeight = Math.Max(400, TIMELINE_HEADER_HEIGHT + 100);
         }
+        
+        // Force layout update to ensure ScrollViewer recognizes new size
+        InvalidateMeasure();
+        InvalidateArrange();
     }
 
     private ScrollViewer? FindScrollViewer()

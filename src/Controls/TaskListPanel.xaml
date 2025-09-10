@@ -183,6 +183,7 @@
                                 <Grid Grid.Row="0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
@@ -190,7 +191,17 @@
                                     <Ellipse Grid.Column="0" 
                                              Style="{StaticResource StatusIndicatorStyle}"/>
 
+                                    <!-- Hierarchy Level Indicator -->
                                     <TextBlock Grid.Column="1"
+                                               Text="{Binding HierarchyLevelIndicator}"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="#6c757d"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0,4,0"
+                                               ToolTip="{Binding HierarchyLevelDescription}"/>
+
+                                    <TextBlock Grid.Column="2"
                                                Text="{Binding Name}"
                                                FontSize="14"
                                                FontWeight="SemiBold"
@@ -198,7 +209,7 @@
                                                TextWrapping="Wrap"
                                                VerticalAlignment="Center"/>
 
-                                    <TextBlock Grid.Column="2"
+                                    <TextBlock Grid.Column="3"
                                                Text="{Binding Priority}"
                                                FontSize="10"
                                                FontWeight="SemiBold"
